@@ -1,0 +1,208 @@
+syntax = "proto3";
+
+package wechat;
+option go_package="./wechat";
+
+import "google/protobuf/any.proto";
+
+// 错误信息定义
+message Error {
+  int32 code = 1; // 错误码，0为成功，其他为失败
+  string msg = 2; // 错误信息，成功时为空即可，失败时为错误信息概述
+}
+
+message ErrorResp {
+    Error error = 1;
+}
+
+
+//service ContactUser {
+//}
+//
+//
+//
+//service ContactDepartment {
+//}
+
+
+
+message ExternalUserInfoReq {
+    repeated string external_userid_list = 1;
+    repeated string unionid_list = 2;
+    ExternalUserInfoOpt opt = 3;
+}
+message ExternalUserInfoOpt {
+   bool need_follow = 1;
+   bool need_attribute = 2;
+}
+message ExternalUserInfoResp {
+  map<string, ExternalUserInfo> list = 1;
+}
+message ExternalUserInfo {
+  ExternalUser external_user = 1;
+  repeated ExternalUserFollowUser follow_user = 2;
+}
+message ExternalUser {
+  string external_userid = 1;
+  string name = 2;
+  string position = 3;
+  string avatar = 4;
+  string corp_name = 5;
+  string corp_full_name = 6;
+  int32 type = 7;
+  int32 gender = 8;
+  string unionid = 9;
+  ExternalUserProfile external_profile = 10;
+}
+message ExternalUserProfile {
+  repeated ExternalUserProfileItem external_attr = 1;
+}
+message ExternalUserProfileItem {
+  int32 type = 1;
+  string name = 2;
+  ExternalUserProfileItemText text = 3;
+}
+message ExternalUserProfileItemText {
+  string value = 1;
+}
+message ExternalUserFollowUser {
+  string userid = 1;
+  string remark = 2;
+  string description = 3;
+  int32 createtime = 4;
+  repeated ExternalUserFollowUserTag tags = 5;
+  string remark_corp_name = 6;
+  repeated string remark_mobiles = 7;
+  string oper_userid = 8;
+  int32 add_way = 9;
+  ExternalUserFollowUserWechatChannel wechat_channels = 10;
+}
+message ExternalUserFollowUserTag {
+  string group_name = 1;
+  string tag_name = 2;
+  string tag_id = 3;
+  int32 type = 4;
+}
+message ExternalUserFollowUserWechatChannel {
+  string nickname = 1;
+  int32 source = 2;
+}
+message ExternalUserIdReq {
+  repeated string userid_list = 1;
+}
+message ExternalUserIdResp {
+  Error error = 1;
+  repeated string external_userid = 2;
+}
+message UpdateExternalUserRemarkReq {
+  string userid = 1;
+  string external_userid = 2;
+  string remark = 3;
+  string description = 4;
+  string remark_company = 5;
+  repeated string remark_mobiles = 6;
+  string remark_pic_mediaid = 7;
+}
+service ExternalContactUser {
+  rpc GetExternalUserInfo(ExternalUserInfoReq) returns (ExternalUserInfoResp);
+  rpc GetExternalUserIdByUserId(ExternalUserIdReq) returns (ExternalUserIdResp);
+  rpc UpdateExternalUserRemark(UpdateExternalUserRemarkReq) returns (ErrorResp);
+}
+
+
+
+message UseridList {
+  repeated string userid_list = 1;
+}
+message ExternalGroupChatListReq {
+  int32 status_filter =1;
+  UseridList owner_filter = 2;
+  string cursor = 3;
+  int32 limit = 4;
+}
+message ExternalGroupChatInfoReq {
+  string chat_id =1;
+  int32 need_name = 2;
+}
+service ExternalContactGroupChat {
+  rpc GetExternalGroupChatInfo(ExternalGroupChatInfoReq) returns (ErrorResp);
+  rpc GetExternalGroupChatList(ExternalGroupChatListReq) returns (ErrorResp);
+}
+
+
+message ExternalContactWayData {
+  string config_id = 1;
+  string qr_code = 2;
+  int32 type = 3;
+  int32 scene = 4;
+  int32 style = 5;
+  string remark = 6;
+  bool skip_verify = 7;
+  string state = 8;
+  repeated string user = 9;
+  repeated int32 party = 10;
+  bool is_temp = 11;
+  int32 expires_in = 12;
+  int32 chat_expires_in = 13;
+  string unionid = 14;
+  bool is_exclusive = 15;
+  ExternalContactWayConclusion conclusions = 16;
+}
+message ExternalContactWayConclusion {
+  ExternalContactWayConclusionText text = 1;
+  ExternalContactWayConclusionImage image = 2;
+  ExternalContactWayConclusionLink link = 3;
+  ExternalContactWayConclusionMiniprogram miniprogram = 4;
+}
+message ExternalContactWayConclusionText {
+  string content = 1;
+}
+message ExternalContactWayConclusionImage {
+  string media_id = 1;
+}
+message ExternalContactWayConclusionLink {
+  string title = 1;
+  string picurl = 2; // 格式问题
+  string desc = 3;
+  string url = 4;
+}
+message ExternalContactWayConclusionMiniprogram {
+  string title = 1;
+  string pic_media_id = 2;  // 格式问题
+  string appid = 3;
+  string page = 4;
+}
+message SaveExternalContactWayResp {
+  Error error = 1;
+  string config_id = 2;
+  string qr_code = 3;
+}
+message ExternalContactWayReq {
+  string config_id = 1;
+}
+message ExternalContactWayInfoResp {
+  Error error = 1;
+  ExternalContactWayData contact_way = 2;
+}
+message ExternalContactWayListReq {
+  int32 start_time = 1;
+  int32 end_time = 2;
+  string cursor = 3;
+  int32 limit = 4;
+}
+message ExternalContactWayListResp {
+  Error error = 1;
+  repeated ExternalContactWayReq contact_way = 2;
+  string next_cursor = 3;
+}
+
+service ExternalContactWay {
+  rpc CreateExternalContactWay(ExternalContactWayData) returns (SaveExternalContactWayResp);
+  rpc UpdateExternalContactWay(ExternalContactWayData) returns (SaveExternalContactWayResp);
+  rpc DeleteExternalContactWay(ExternalContactWayReq) returns (ErrorResp);
+  rpc GetExternalContactWayInfo(ExternalContactWayReq) returns (ExternalContactWayInfoResp);
+  rpc GetExternalContactWayList(ExternalContactWayListReq) returns (ExternalContactWayListResp);
+}
+
+//service ExternalContactMoment {
+//}

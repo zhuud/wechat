@@ -1,0 +1,61 @@
+syntax = "v1"
+
+info (
+	title:  "企业微信私有化api"
+	desc:   "http服务"
+	author: "soyoung"
+	email:  "zhudi@soyoung.com"
+)
+
+type request {}
+
+type response {
+	Code int         `json:"code"`
+	Msg  string      `json:"msg"`
+	Data interface{} `json:"data"`
+}
+
+type callbackReq {
+	ToUserName string      `json:"ToUserName"`
+	CreateTime int         `json:"CreateTime"`
+	MsgType    string      `json:"MsgType"`
+	Event      string      `json:"Event"`
+	ChangeType string      `json:"ChangeType"`
+	Data       interface{} `json:"Data"`
+}
+
+@server (
+	prefix:  /callback
+	group:   callback
+	timeout: 10s
+)
+service wechat-api {
+	@doc "企微回调处理"
+	@handler CallbackHandler
+	get / (callbackReq) returns (response)
+}
+
+type externalUserRequest {
+	ExternalUseridList []string `json:"external_userid_list,optional"`
+	UnionidList        []string `json:"unionid_list,optional"`
+}
+
+@server (
+	signature: true // 通过 signature 关键字开启签名功能
+	//jwt:        Auth // 对当前 Foo 语法块下的所有路由，开启 jwt 认证，不需要则请删除此行
+	prefix:  /externaluser // 对当前 Foo 语法块下的所有路由，新增 /v1 路由前缀，不需要则请删除此行
+	group:   externalcontactuser // 对当前 Foo 语法块下的所有路由，路由归并到 g1 目录下，不需要则请删除此行
+	timeout: 2s // 对当前 Foo 语法块下的所有路由进行超时配置，不需要则请删除此行
+	//middleware: AuthInterceptor // 对当前 Foo 语法块下的所有路由添加中间件，不需要则请删除此行
+	maxBytes: 1048576 // 对当前 Foo 语法块下的所有路由添加请求体大小控制，单位为 byte,goctl 版本 >= 1.5.0 才支持
+)
+service wechat-api {
+	@doc "企微外部用户详情"
+	@handler ExternalUserInfoHandler
+	post /info (externalUserRequest) returns (response)
+
+	@doc "企微外部用户详情列表"
+	@handler ExternalUserListHandler
+	post /list (externalUserRequest) returns (response)
+}
+

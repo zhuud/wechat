@@ -1,0 +1,47 @@
+Name: wechat-rpc
+ListenOn: 0.0.0.0:9527
+Mode: test
+Timeout: 3000 # ms
+
+# 是否开启健康检查
+Health: true
+# 服务配置
+DevServer:
+  Enabled: true
+  Port: 6060
+  HealthPath: "/healthz"
+  EnableMetrics: true
+  MetricsPath: "/metrics"
+  EnablePprof: true
+
+# 是否打印详细日志
+Verbose: true
+Log:
+  ServiceName: wechat-rpc
+  Level: info
+  Stat: true
+  Mode: file
+  Path: /www/site/logs/wechatrpc
+  KeepDays: 180
+  Rotation: daily
+
+# http配置
+FastHttp:
+  ReadTimeout: 3
+  WriteTimeout: 3
+  MaxConnWaitTimeout: 3
+
+# 数据库链接
+WechatDb:
+  DataSource:
+  Timeout: 1s
+  ReadTimeout: 5s
+  WriteTimeout: 5s
+
+
+# 链路追踪
+Telemetry:
+  Name: wechat-rpc
+  Endpoint: http://127.0.0.1:14268/api/traces
+  Sampler: 1.0
+  Batcher: jaeger

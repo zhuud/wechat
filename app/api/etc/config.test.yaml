@@ -1,0 +1,39 @@
+Name: wechat-api
+Host: 0.0.0.0
+Port: 80
+Mode: test
+Timeout: 5000 # ms
+
+# 服务配置
+DevServer:
+  Enabled: true
+  Port: 6060
+  HealthPath: "/healthz"
+  EnableMetrics: true
+  MetricsPath: "/metrics"
+  EnablePprof: true
+
+# 是否打印详细日志
+Verbose: true
+Log:
+  ServiceName: wechat-api
+  Level: info
+  Stat: true
+  Mode: file
+  Path: /www/site/logs/wechatapi
+  KeepDays: 180
+  Rotation: daily
+
+# 链路追踪
+Telemetry:
+  Name: wechat-api
+  Endpoint: http://127.0.0.1:14268/api/traces
+  Sampler: 1.0
+  Batcher: jaeger
+
+
+WechatRpc:
+  Endpoints:
+    - user-wechat-test-wechat-rpc.go-rpc:9527
+  Timeout: 3000
+  NonBlock: false

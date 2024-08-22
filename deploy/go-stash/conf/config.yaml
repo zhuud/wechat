@@ -1,0 +1,50 @@
+Clusters:
+  - Input:
+      Kafka:
+        Name: go-stash
+        Brokers:
+          - "127.0.0.1:9092"
+        Topics:
+          - wechat-log
+        Group: pro
+        # kafka的链接数
+        Conns: 2
+        # 每个连接数打开的线程数，计算规则为Conns * Consumers，不建议超过分片总数
+        Consumers: 10
+        # 处理数据的线程数量 Conns * Consumers * 2
+        Processors: 40
+    Filters:
+      - Action: drop
+        Conditions:
+          - Key: k8s_container_name
+            Value: "-rpc"
+            Type: contains
+          - Key: level
+            Value: info
+            Type: match
+            Op: and
+      - Action: remove_field
+        Fields:
+          - _source
+          - _type
+          - _score
+          - _id
+          - "@version"
+          - topic
+          - index
+          - beat
+          - docker_container
+          - offset
+          - prospector
+          - source
+          - stream
+          - "@metadata"
+      - Action: transfer
+        Field: message
+        Target: data
+    Output:
+      ElasticSearch:
+        Hosts:
+          - "http://elasticsearch:9200"
+        Index: "wechat-{{yyyy-MM-dd}}"
+        TimeZone: Asia/Shanghai

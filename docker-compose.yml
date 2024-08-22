@@ -1,0 +1,182 @@
+version: '3.8'
+
+services:
+
+  #查看es数据
+  kibana:
+    image: docker.elastic.co/kibana/kibana:8.15.0
+    container_name: kibana
+    environment:
+      - elasticsearch.hosts=http://elasticsearch:9200
+      - TZ=Asia/Shanghai
+    restart: always
+    ports:
+      - "5601:5601"
+    depends_on:
+      - elasticsearch
+    networks:
+      - wechat_net
+
+
+
+  # 链路追踪
+  jaeger:
+    platform: linux/amd64
+    image: jaegertracing/all-in-one:latest
+    container_name: jaeger
+    environment:
+      - SPAN_STORAGE_TYPE=elasticsearch
+      - ES_SERVER_URLS=http://elasticsearch:9200
+      - LOG_LEVEL=debug
+    restart: always
+    ports:
+      - "5775:5775/udp"
+      - "6831:6831/udp"
+      - "6832:6832/udp"
+      - "5778:5778"
+      - "16686:16686"
+      - "14268:14268"
+      - "9411:9411"
+    depends_on:
+      - elasticsearch
+    networks:
+      - wechat_net
+
+
+
+  # 监控收集数据
+  prometheus:
+    platform: linux/amd64
+    image: prom/prometheus
+    container_name: prometheus
+    environment:
+      TZ: Asia/Shanghai
+    volumes:
+      - ./deploy/prometheus/conf/prometheus.yml:/etc/prometheus/prometheus.yml
+      - ./deploy/prometheus/data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+    restart: always
+    ports:
+      - "9090:9090"
+    networks:
+      - wechat_net
+
+  # 监控数据展示
+  grafana:
+    platform: linux/amd64
+    image: grafana/grafana:11.1.0
+    container_name: grafana
+    environment:
+      TZ: Asia/Shanghai
+    volumes:
+      - ./deploy/grafana/data:/var/lib/grafana
+    restart: always
+    ports:
+      - "3000:3000"
+    networks:
+      - wechat_net
+
+
+
+  # 日志收集
+  filebeat:
+    platform: linux/amd64
+    image: docker.elastic.co/beats/filebeat:8.15.0
+    container_name: filebeat
+    environment:
+      TZ: Asia/Shanghai
+    entrypoint: "filebeat -e -strict.perms=false"  #解决配置文件权限问题 - Solving the configuration file permissions
+    volumes:
+      - ./deploy/filebeat/conf/filebeat.yml:/usr/share/filebeat/filebeat.yml
+      # 此处需指定docker的containers目录，取决于你docker的配置 - The containers directory of docker needs to be specified here, depending on your docker configuration
+      # 如snap安装的docker，则为/var/snap/docker/common/var-lib-docker/containers - Example if docker is installed by Snap /var/snap/docker/common/var-lib-docker/containers
+      # - /var/snap/docker/common/var-lib-docker/containers:/var/lib/docker/containers
+      - /var/lib/docker/containers:/var/lib/docker/containers
+    restart: always
+    depends_on:
+      - kafka
+    networks:
+      - wechat_net
+
+
+
+  # 消费kafka中filebeat收集的数据输出到es
+  go-stash:
+    # image: kevinwan/go-stash:1.0 # macOs intel or linux amd
+    image: kevinwan/go-stash:1.0-arm64 # macOs m1  or linux arm
+    container_name: go-stash
+    environment:
+      TZ: Asia/Shanghai
+    volumes:
+      - ./deploy/go-stash/conf:/app/etc
+    restart: always
+    depends_on:
+      - elasticsearch
+      - kafka
+    networks:
+      - wechat_net
+
+
+
+  # 消息队列
+  kafka:
+    image: bitnami/kafka:3.5
+    container_name: kafka
+    ports:
+      - "9092:9092"
+      - "9093:9093"
+    environment:
+      - KAFKA_ADVERTISED_HOST_NAME=kafka
+      - KAFKA_AUTO_CREATE_TOPICS_ENABLE=true
+      - KAFKA_ENABLE_KRAFT=yes
+      - KAFKA_KRAFT_CLUSTER_ID=xYcCyHmJlIaLzLoBzVwIcP
+      - KAFKA_CFG_NODE_ID=1
+      - KAFKA_CFG_PROCESS_ROLES=controller,broker
+      - KAFKA_CFG_LISTENERS=PLAINTEXT://127.0.0.1:9092,CONTROLLER://127.0.0.1:9093
+      - KAFKA_CFG_ADVERTISED_LISTENERS=PLAINTEXT://127.0.0.1:9092
+      - KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP=CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT
+      - KAFKA_CFG_CONTROLLER_QUORUM_VOTERS=1@127.0.0.1:9093
+      - KAFKA_CFG_CONTROLLER_LISTENER_NAMES=CONTROLLER
+      - ALLOW_PLAINTEXT_LISTENER=yes
+      - KAFKA_HEAP_OPTS=-Xms256M -Xmx512M
+      - TZ=Asia/Shanghai
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    restart: always
+    networks:
+      - wechat_net
+
+
+
+  # es kafka业务日志、jaeger链路数据
+  elasticsearch:
+    platform: linux/amd64
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.15.0
+    container_name: elasticsearch
+    environment:
+      - discovery.type=single-node
+      - bootstrap.memory_lock=true
+      - xpack.security.enabled=false # 禁用安全配置 v8默认开启 线上环境建议开启
+      - ES_JAVA_OPTS=-Xms216m -Xmx512m
+      - TZ=Asia/Shanghai
+      - TAKE_FILE_OWNERSHIP=true # volumes 挂载权限问题
+    volumes:
+      - ./deploy/elasticsearch/data:/usr/share/elasticsearch/data
+    restart: always
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+    networks:
+      - wechat_net
+
+
+
+networks:
+  wechat_net:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.16.0.0/16
+

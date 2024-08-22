@@ -1,0 +1,25 @@
+global:
+  scrape_interval: 10s
+  evaluation_interval: 10s
+  external_labels:
+    monitor: 'wechat-monitor'
+
+scrape_configs:
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['127.0.0.1:9090']
+
+  - job_name: 'wechat-api'
+    static_configs:
+      - targets: [ 'wechat:8080' ]
+        labels:
+          job: wechat-api
+          app: wechat-api
+          env: dev
+  - job_name: 'wechat-rpc'
+    static_configs:
+      - targets: [ 'wechat:9527' ]
+        labels:
+          job: wechat-rpc
+          app: wechat-rpc
+          env: dev
