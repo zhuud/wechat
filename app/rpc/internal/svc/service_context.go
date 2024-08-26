@@ -1,6 +1,9 @@
 package svc
 
 import (
+	"log"
+	"sync"
+
 	"rpc/internal/config"
 	"rpc/model"
 
@@ -25,29 +28,45 @@ type ServiceContext struct {
 	ModelExternalUserFollowAttribute model.TbExternalUserFollowAttributeModel
 }
 
+var (
+	ctx  *ServiceContext
+	once sync.Once
+)
+
 func NewServiceContext(c config.Config) *ServiceContext {
 
-	// local cache
-	localCache, err := collection.NewCache(config.LocalCacheExpire)
-	logx.Must(err)
-	// mysql
-	conn := sqlx.NewMysql(c.WechatDb.DataSource)
+	once.Do(func() {
+		// local cache
+		localCache, err := collection.NewCache(config.LocalCacheExpire)
+		logx.Must(err)
+		// mysql
+		conn := sqlx.NewMysql(c.WechatDb.DataSource)
 
-	//
-	return &ServiceContext{
-		Config: c,
+		//
+		ctx = &ServiceContext{
+			Config: c,
 
-		// infra
-		FastHttp:   fasthttp.NewFastHttp(c.FastHttp),
-		Redis:      redis.MustNewRedis(c.CacheRedis),
-		LocalCache: localCache,
+			// infra
+			FastHttp:   fasthttp.NewFastHttp(c.FastHttp),
+			Redis:      redis.MustNewRedis(c.CacheRedis),
+			LocalCache: localCache,
 
-		// wecom
-		WeCom: NewWeCom(c.WeCom, c.CacheRedis),
+			// wecom
+			WeCom: NewWeCom(c.WeCom, c.CacheRedis),
 
-		// model
-		ModelExternalUser:                model.NewTbExternalUserModel(conn, c.ModelRedis),
-		ModelExternalUserFollow:          model.NewTbExternalUserFollowModel(conn, c.ModelRedis),
-		ModelExternalUserFollowAttribute: model.NewTbExternalUserFollowAttributeModel(conn, c.ModelRedis),
+			// model
+			ModelExternalUser:                model.NewTbExternalUserModel(conn, c.ModelRedis),
+			ModelExternalUserFollow:          model.NewTbExternalUserFollowModel(conn, c.ModelRedis),
+			ModelExternalUserFollowAttribute: model.NewTbExternalUserFollowAttributeModel(conn, c.ModelRedis),
+		}
+	})
+
+	return ctx
+}
+
+func GetSvcCtx() *ServiceContext {
+	if ctx == nil {
+		log.Fatalf("svc.GetSvcCtx is nil")
 	}
+	return ctx
 }

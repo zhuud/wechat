@@ -32,3 +32,8 @@ go.work.sum
 # vim auto backup file
 *~
 !OWNERS
+
+# app
+app/rpc/etc/config.local.yaml
+app/api/etc/config.local.yaml
+app/admin/etc/config.local.yaml

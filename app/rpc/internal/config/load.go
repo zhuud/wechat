@@ -5,15 +5,27 @@ import (
 	"log"
 	"time"
 
-	"github.com/zeromicro/go-zero/core/conf"
 	"github.com/zeromicro/go-zero/core/stores/cache"
 	"github.com/zeromicro/go-zero/core/stores/redis"
+	"github.com/zhuud/go-library/svc/conf"
+	"github.com/zhuud/go-library/svc/conf/confx"
 	"github.com/zhuud/go-library/svc/zookeeper"
 )
 
-func MustLoad(path string) Config {
+func init() {
+	zk, err := zookeeper.NewZookeeperClient()
+	if err != nil {
+		log.Fatalf("config.init.NewZookeeperClient error: %s", err.Error())
+	}
+	conf.AppendReader(confx.NewZookeeperReader(zk))
+}
+
+func MustLoad() Config {
 	c := Config{}
-	conf.MustLoad(path, &c)
+	err := conf.GetUnmarshal("", &c)
+	if err != nil {
+		log.Fatalf("config.MustLoad error: %s", err.Error())
+	}
 
 	if len(c.WechatDb.DataSource) == 0 {
 		c.WechatDb.DataSource = mustLoadMysql(c, "db_wechat")
@@ -36,12 +48,12 @@ func MustLoad(path string) Config {
 func mustLoadMysql(c Config, dbname string) string {
 	dc := dbConf{}
 
-	err := zookeeper.GetUnmarshalConf(fmt.Sprintf("/qconf/web-config/%s", dbname), &dc)
+	err := conf.GetUnmarshal(fmt.Sprintf("/qconf/web-config/%s", dbname), &dc)
 	if err != nil {
-		log.Fatalf("error: config file db, %s", err.Error())
+		log.Fatalf("config.mustLoadMysql error: %s", err.Error())
 	}
 	if len(dc.Driver) == 0 || len(dc.Host) == 0 || len(dc.Port) == 0 || len(dc.Dbname) == 0 || len(dc.Username) == 0 || len(dc.Password) == 0 || len(dc.Charset) == 0 {
-		log.Fatalf("config.mustLoadMysql - incomplete mysl config, config: %v", dc)
+		log.Fatalf("config.mustLoadMysql incomplete mysl config, config: %v", dc)
 	}
 
 	return fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?charset%s&parseTime=True&loc=Local&timeout=%s&readTimeout=%s&writeTimeout=%s", dc.Username, dc.Password, dc.Host, dc.Port, dc.Dbname, dc.Charset, c.WechatDb.Timeout, c.WechatDb.ReadTimeout, c.WechatDb.WriteTimeout)
@@ -50,12 +62,12 @@ func mustLoadMysql(c Config, dbname string) string {
 func mustLoadRedis(dbname string) redis.RedisConf {
 	rc := redisConf{}
 
-	err := zookeeper.GetUnmarshalConf(fmt.Sprintf("/qconf/web-config/%s", dbname), &rc)
+	err := conf.GetUnmarshal(fmt.Sprintf("/qconf/web-config/%s", dbname), &rc)
 	if err != nil {
-		log.Fatalf("error: config file redis, %s", err.Error())
+		log.Fatalf("config.mustLoadRedis error: %s", err.Error())
 	}
 	if len(rc.Host) == 0 || len(rc.Port) == 0 || len(rc.Auth) == 0 {
-		log.Fatalf("config.mustLoadRedis - incomplete redis config, config: %v", rc)
+		log.Fatalf("config.mustLoadRedis incomplete redis config, config: %v", rc)
 	}
 
 	return redis.RedisConf{
@@ -70,16 +82,16 @@ func mustLoadWeCom() []WeComConf {
 
 	wcList := make([]WeComConf, 0)
 
-	err := zookeeper.GetUnmarshalConf(fmt.Sprintf("/application-secret-key/%s", "wecom_corp"), &wcList)
+	err := conf.GetUnmarshal(fmt.Sprintf("/application-secret-key/%s", "wecom_corp"), &wcList)
 	if err != nil {
-		log.Fatalf("error: config file wecom, %s", err.Error())
+		log.Fatalf("config.mustLoadWeCom error: %s", err.Error())
 	}
 	if len(wcList) == 0 {
-		log.Fatalf("config.mustLoadWeCom - no config")
+		log.Fatalf("config.mustLoadWeCom no config")
 	}
 	for _, wc := range wcList {
 		if len(wc.CorpId) == 0 || len(wc.CorpKey) == 0 || len(wc.ContactSecret) == 0 || len(wc.ExternalContactSecret) == 0 || len(wc.ChatSecret) == 0 {
-			log.Fatalf("config.mustLoadWeCom - incomplete wecom config, config: %v", wc)
+			log.Fatalf("config.mustLoadWeCom incomplete wecom config, config: %v", wc)
 		}
 	}
 

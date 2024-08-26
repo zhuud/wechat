@@ -15,7 +15,7 @@ import (
 var svcCtx *svc.ServiceContext
 
 func init() {
-	svcCtx = svc.NewServiceContext(config.MustLoad("../../../etc/config.yaml"))
+	svcCtx = svc.NewServiceContext(config.MustLoad())
 }
 
 func Test_GetExternalUserInfo(t *testing.T) {
