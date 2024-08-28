@@ -38,6 +38,19 @@ FastHttp:
   MaxConnWaitTimeout: 3
   Concurrency: 1024
 
+# kafka配置
+Kafka:
+  Name: wechat-mq
+  Brokers:
+    - 10.10.10.10:9092
+  Group:
+  Topic:
+  Offset: last
+  Conns: 1
+  Consumers: 8
+  Processors: 8
+  CommitInOrder: true
+
 # 数据库链接
 WechatDb:
   DataSource:
@@ -55,12 +68,6 @@ CacheRedis:
   Host:
   Pass:
   Type: node
-
-# model缓存
-#ModelRedis:
-#  - Host:
-#    Pass:
-#    Type:
 
 # 链路追踪
 Telemetry:

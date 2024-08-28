@@ -9,7 +9,7 @@ CpuThreshold: 900 # 降载阈值 默认900(90%) 可允许设置范围0到1000
 Health: true
 #服务配置
 ZkAddr:
-  - 10.10.10.100:2181
+  - 10.10.10.10:2181
 DevServer:
   Enabled: true
   Port: 6062 # 开发环境没用容器的话api rpc相同端口会冲突
@@ -38,6 +38,19 @@ FastHttp:
   MaxConnWaitTimeout: 3
   Concurrency: 1024
 
+# kafka配置
+Kafka:
+  Name: wechat-mq
+  Brokers:
+    - 10.10.10.10:9092
+  Group:
+  Topic:
+  Offset: last
+  Conns: 1
+  Consumers: 8
+  Processors: 8
+  CommitInOrder: true
+
 # 数据库链接
 WechatDb:
   DataSource:
@@ -55,12 +68,6 @@ CacheRedis:
   Host:
   Pass:
   Type: node
-
-# model缓存
-#ModelRedis:
-#  - Host:
-#    Pass:
-#    Type:
 
 # 链路追踪
 Telemetry:
