@@ -31,7 +31,7 @@ https://go-zero.dev/docs/tutorials/cli/rpc
 https://go-zero.dev/docs/tutorials/cli/api  
 https://go-zero.dev/docs/tutorials/cli/model  
 
-> rpc client 全部目录都可以删除重新生成
+> rpc client 全部目录都可以删除重新生成   
 > rpc server 目录register.go 要保留，其他都可以删除重新生成
 
 ### wechat sdk

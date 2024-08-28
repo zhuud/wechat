@@ -20,7 +20,8 @@ type ServiceContext struct {
 	Redis      *redis.Redis      // redis
 	LocalCache *collection.Cache // local cache
 
-	WeCom *WeCom // 企微api
+	WeCom       *WeCom             // 企微api
+	WechatLimit *WechatPeriodLimit // 企微限流
 
 	// model
 	ModelExternalUser                model.TbExternalUserModel
@@ -40,7 +41,9 @@ func NewServiceContext(c config.Config) *ServiceContext {
 		localCache, err := collection.NewCache(config.LocalCacheExpire)
 		logx.Must(err)
 		// mysql
-		conn := sqlx.NewMysql(c.WechatDb.DataSource)
+		msyqlConn := sqlx.NewMysql(c.WechatDb.DataSource)
+		// redis
+		redisConn := redis.MustNewRedis(c.CacheRedis)
 
 		//
 		ctx = &ServiceContext{
@@ -48,16 +51,18 @@ func NewServiceContext(c config.Config) *ServiceContext {
 
 			// infra
 			FastHttp:   fasthttp.NewFastHttp(c.FastHttp),
-			Redis:      redis.MustNewRedis(c.CacheRedis),
+			Redis:      redisConn,
 			LocalCache: localCache,
 
 			// wecom
 			WeCom: NewWeCom(c.WeCom, c.CacheRedis),
+			// limit
+			WechatLimit: NewWechatPeriodLimit(redisConn),
 
 			// model
-			ModelExternalUser:                model.NewTbExternalUserModel(conn, c.ModelRedis),
-			ModelExternalUserFollow:          model.NewTbExternalUserFollowModel(conn, c.ModelRedis),
-			ModelExternalUserFollowAttribute: model.NewTbExternalUserFollowAttributeModel(conn, c.ModelRedis),
+			ModelExternalUser:                model.NewTbExternalUserModel(msyqlConn, c.ModelRedis),
+			ModelExternalUserFollow:          model.NewTbExternalUserFollowModel(msyqlConn, c.ModelRedis),
+			ModelExternalUserFollowAttribute: model.NewTbExternalUserFollowAttributeModel(msyqlConn, c.ModelRedis),
 		}
 	})
 
