@@ -26,6 +26,7 @@ message ErrorResp {
 
 
 
+
 message ExternalUserInfoReq {
     repeated string external_userid_list = 1;
     repeated string unionid_list = 2;
