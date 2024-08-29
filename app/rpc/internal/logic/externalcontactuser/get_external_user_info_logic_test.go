@@ -62,7 +62,7 @@ func Test_Get(t *testing.T) {
 }
 
 func Test_GetByUserId(t *testing.T) {
-	prasms := &request2.RequestListContactWay{}
-	list,err := svcCtx.WeCom.WithCorp("yx").ContactWay.List(context.Background(), prasms)
+	prasms := &request2.RequestListContactWay{Limit: 10}
+	list, err := svcCtx.WeCom.WithCorp("yx").ContactWay.List(context.Background(), prasms)
 	spew.Dump(list, err)
 }

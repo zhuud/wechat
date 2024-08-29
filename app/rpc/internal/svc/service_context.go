@@ -26,6 +26,7 @@ type ServiceContext struct {
 	ModelExternalUser                model.TbExternalUserModel
 	ModelExternalUserFollow          model.TbExternalUserFollowModel
 	ModelExternalUserFollowAttribute model.TbExternalUserFollowAttributeModel
+	ModelUserServiceQrcodeModel      model.UserServiceQrcodeModel
 }
 
 var (
@@ -58,6 +59,7 @@ func NewServiceContext(c config.Config) *ServiceContext {
 			ModelExternalUser:                model.NewTbExternalUserModel(conn, c.ModelRedis),
 			ModelExternalUserFollow:          model.NewTbExternalUserFollowModel(conn, c.ModelRedis),
 			ModelExternalUserFollowAttribute: model.NewTbExternalUserFollowAttributeModel(conn, c.ModelRedis),
+			ModelUserServiceQrcodeModel:      model.NewUserServiceQrcodeModel(conn),
 		}
 	})
 
