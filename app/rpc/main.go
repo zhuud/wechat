@@ -3,6 +3,7 @@ package main
 import (
 	"rpc/internal/cmd"
 	"rpc/internal/config"
+	"rpc/internal/mq"
 	"rpc/internal/server"
 	"rpc/internal/svc"
 
@@ -17,5 +18,6 @@ func main() {
 
 	app.AddCommand(server.RegisterRpc(c, svcCtx))
 	app.AddCommand(cmd.RegisterCmd(c, svcCtx)...)
+	app.AddCommand(mq.RegisterMq(c, svcCtx)...)
 	app.Run()
 }

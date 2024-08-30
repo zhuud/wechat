@@ -31,6 +31,19 @@ FastHttp:
   WriteTimeout: 3
   MaxConnWaitTimeout: 3
 
+# kafka配置
+Kafka:
+  Name: wechat-mq
+  Brokers:
+    - 10.10.10.10:9092
+  Group:
+  Topic:
+  Offset: last
+  Conns: 1
+  Consumers: 8
+  Processors: 8
+  CommitInOrder: true
+
 # 数据库链接
 WechatDb:
   DataSource:

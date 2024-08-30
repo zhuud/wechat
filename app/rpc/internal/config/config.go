@@ -3,6 +3,7 @@ package config
 import (
 	"time"
 
+	"github.com/zeromicro/go-queue/kq"
 	"github.com/zeromicro/go-zero/core/stores/cache"
 	"github.com/zeromicro/go-zero/core/stores/redis"
 	"github.com/zeromicro/go-zero/zrpc"
@@ -14,6 +15,7 @@ const LocalCacheExpire = time.Second * 60
 // Config 总配置
 type Config struct {
 	zrpc.RpcServerConf
+	Kafka      kq.KqConf           `json:",optional"`
 	WechatDb   MysqlConf           `json:",optional"`
 	CacheRedis redis.RedisConf     `json:",optional"`
 	ModelRedis cache.CacheConf     `json:",optional"`
@@ -33,6 +35,7 @@ type (
 		ConnMaxLifeTime int    `json:",optional"`
 		ConnMaxIdleTime int    `json:",optional"`
 	}
+
 	WeComConf struct {
 		CorpKey               string
 		CorpName              string

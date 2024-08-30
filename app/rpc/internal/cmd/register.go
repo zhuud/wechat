@@ -1,6 +1,8 @@
 package cmd
 
 import (
+	"log"
+
 	"rpc/internal/cmd/externalcontactuser"
 	"rpc/internal/cmd/userserviceqrcode"
 	"rpc/internal/config"
@@ -9,11 +11,16 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func RegisterCmd(_ config.Config, svcCtx *svc.ServiceContext) []*cobra.Command {
+func RegisterCmd(c config.Config, svcCtx *svc.ServiceContext) []*cobra.Command {
+	err := c.SetUp()
+	if err != nil {
+		log.Fatalf("cmd.RegisterCmd SetUp config:%v, error: %v", c, err)
+	}
+
 	return []*cobra.Command{
 		{
 			Use:  "CmdSyncExternalUser",
-			RunE: externalcontactuser.NewSyncExternalUserCmd(svcCtx).SyncExternalUser,
+			RunE: externalcontactuser.NewSyncExternalUserCmd(svcCtx),
 		},
 		{
 			Use:  "CmdUserServiceQrcodeSync",

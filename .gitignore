@@ -34,6 +34,6 @@ go.work.sum
 !OWNERS
 
 # app
-app/rpc/etc/config.local.yaml
-app/api/etc/config.local.yaml
-app/admin/etc/config.local.yaml
+# app/rpc/etc/config.local.yaml
+# app/api/etc/config.local.yaml
+# app/admin/etc/config.local.yaml
