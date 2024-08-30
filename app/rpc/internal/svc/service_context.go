@@ -61,10 +61,10 @@ func NewServiceContext(c config.Config) *ServiceContext {
 			WechatLimit: NewWechatPeriodLimit(redisConn),
 
 			// model
-			ModelExternalUser:                model.NewTbExternalUserModel(conn, c.ModelRedis),
-			ModelExternalUserFollow:          model.NewTbExternalUserFollowModel(conn, c.ModelRedis),
-			ModelExternalUserFollowAttribute: model.NewTbExternalUserFollowAttributeModel(conn, c.ModelRedis),
-			ModelUserServiceQrcodeModel:      model.NewUserServiceQrcodeModel(conn),
+			ModelExternalUser:                model.NewTbExternalUserModel(msyqlConn, c.ModelRedis),
+			ModelExternalUserFollow:          model.NewTbExternalUserFollowModel(msyqlConn, c.ModelRedis),
+			ModelExternalUserFollowAttribute: model.NewTbExternalUserFollowAttributeModel(msyqlConn, c.ModelRedis),
+			ModelUserServiceQrcodeModel:      model.NewUserServiceQrcodeModel(msyqlConn),
 		}
 	})
 
