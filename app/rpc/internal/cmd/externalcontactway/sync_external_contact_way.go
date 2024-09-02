@@ -40,21 +40,21 @@ func (s *syncExternalContactWayCmd) Do(args []string) error {
 	var err error
 	list := &contactWayResponse.ResponseListContactWay{}
 
-	list, err = svcCtx.WeCom.WithCorp("yx").ContactWay.List(context.Background(), params)
+	list, err = s.svcCtx.WeCom.WithCorp("yx").ContactWay.List(context.Background(), params)
 	if err != nil {
-		logx.Error(err)
+		s.Error(err)
 		return err
 	}
 	for len(list.ContactWayIDs) > 0 {
 		for _, item := range list.ContactWayIDs {
 
 			configId := item.ConfigID
-			configData, err := svcCtx.WeCom.WithCorp("yx").ContactWay.Get(context.Background(), configId)
+			configData, err := s.svcCtx.WeCom.WithCorp("yx").ContactWay.Get(context.Background(), configId)
 			if err != nil || configData.ContactWay == nil {
-				logx.Error(err)
+				s.Error(err)
 				continue
 			}
-			svcCtx.ModelUserServiceQrcodeModel.Insert(s.ctx, &model.UserServiceQrcode{
+			s.svcCtx.ModelUserServiceQrcodeModel.Insert(s.ctx, &model.UserServiceQrcode{
 				ConfigId:  configId,
 				Type:      int64(configData.ContactWay.Type),
 				Scene:     int64(configData.ContactWay.Scene),
@@ -68,9 +68,9 @@ func (s *syncExternalContactWayCmd) Do(args []string) error {
 
 		params.Limit = 100
 		params.Cursor = list.NextCursor
-		list, err = svcCtx.WeCom.WithCorp("yx").ContactWay.List(context.Background(), params)
+		list, err = s.svcCtx.WeCom.WithCorp("yx").ContactWay.List(context.Background(), params)
 		if err != nil {
-			logx.Error(err)
+			s.Error(err)
 		}
 	}
 
