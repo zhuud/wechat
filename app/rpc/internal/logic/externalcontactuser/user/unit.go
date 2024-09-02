@@ -4,9 +4,9 @@ import (
 	"context"
 	"github.com/zeromicro/go-zero/core/logc"
 	"github.com/zeromicro/go-zero/core/logx"
+	"github.com/zeromicro/go-zero/core/threading"
 	"rpc/internal/svc"
 	"rpc/internal/types"
-	"rpc/pkg/util"
 	"rpc/wechat"
 )
 
@@ -35,18 +35,18 @@ func (t *GetExternalUserUnitLogic) GetUserUint(externalUser map[string]*types.Ex
 
 	ids := t.builds(externalUser)
 
-	async := util.Async{}
-
 	// 并行处理数据读取
+	group := threading.NewRoutineGroup()
+
+	//获取要查询的字段
 	uintOpt := NewGetExternalUserCacheLogic(t.ctx, t.svcCtx).GetUField(in)
 
 	for _, unitField := range uintOpt {
-		async.Go(t.ctx, func(args []any) {
-			goUnitField, _ := args[0].(string)
-			t.getUnit(ids, goUnitField, externalUser)
-		}, unitField)
+		group.RunSafe(func() {
+			t.getUnit(ids, unitField, externalUser)
+		})
 	}
-	async.Wait()
+	group.Wait()
 
 	return
 

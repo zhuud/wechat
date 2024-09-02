@@ -5,12 +5,12 @@ import (
 	"errors"
 	"github.com/zeromicro/go-zero/core/logc"
 	"github.com/zeromicro/go-zero/core/logx"
+	"github.com/zeromicro/go-zero/core/threading"
 	"github.com/zhuud/go-library/svc/conf"
 	"github.com/zhuud/go-library/utils"
 	"rpc/internal/svc"
 	"rpc/internal/types"
 	"rpc/model"
-	"rpc/pkg/util"
 	"rpc/wechat"
 )
 
@@ -67,7 +67,7 @@ func (t *GetExternalUserCacheLogic) GetUserCache(req *wechat.ExternalUserInfoReq
 
 	userToDBUserList, err := t.getUserListByDB(t.ctx, req)
 	if err != nil {
-		logx.Error(t.ctx, `getUserListByDB`, err)
+		t.Error(`getUserListByDB`, err)
 		return userToCacheUserList, err
 	}
 
@@ -104,17 +104,17 @@ func (t *GetExternalUserCacheLogic) getUserListByDB(ctx context.Context, req *we
 	externalUserIdList := req.ExternalUseridList
 	uf := t.GetUField(req)
 
-	async := util.Async{}
+	group := threading.NewRoutineGroup()
+
 	ub := types.ExternalUserUnit{}
 
 	for _, unitField := range uf {
-		async.Go(ctx, func(args []any) {
-			goUnitField, _ := args[0].(string)
-			t.getUnit(ctx, externalUserIdList, goUnitField, &ub)
-		}, unitField)
+		group.RunSafe(func() {
+			t.getUnit(ctx, externalUserIdList, unitField, &ub)
+		})
 	}
 
-	async.Wait()
+	group.Wait()
 
 	for _, externalUserId := range externalUserIdList {
 		if externalUser, ok := ub.ExternalUser[externalUserId]; ok {
@@ -146,7 +146,7 @@ func (t *GetExternalUserCacheLogic) GetUField(req *wechat.ExternalUserInfoReq) [
 	}
 
 	if req.Opt.NeedAttribute {
-		uf = append(uf, `attribute`)
+		uf = append(uf, `follow_attribute`)
 	}
 
 	return uf
@@ -174,7 +174,7 @@ func (t *GetExternalUserCacheLogic) getUnit(ctx context.Context, externalUserIdL
 		}
 		ub.ExternalUserFollow = userIdToFollow
 
-	case `attribute`:
+	case `follow_attribute`:
 		// 查询用户-外部联系人添加员工信息属性表
 		userIdToAttributeList, err := NewGetExternalUserAttributeLogic(t.ctx, t.svcCtx).GetUserFollowAttributeByExternalUserIdList(externalUserIdList)
 		if err != nil {
