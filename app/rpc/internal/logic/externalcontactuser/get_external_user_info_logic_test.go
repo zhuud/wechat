@@ -56,6 +56,6 @@ func Test_GetExternalUserInfo(t *testing.T) {
 }
 
 func Test_Get(t *testing.T) {
-	spew.Dump(svcCtx.WeCom.WithCorp("YouxiangCorp").ExternalUser.Get(context.Background(), "wmYYltDAAAlg093GN65jtwLAn1VqOi5g", ""))
+	spew.Dump(svcCtx.WeCom.WithCorp("yx").ExternalUser.Get(context.Background(), "wmYYltDAAAlg093GN65jtwLAn1VqOi5g", ""))
 	return
 }
