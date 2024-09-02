@@ -1,53 +1,73 @@
 package svc
 
 import (
+	"fmt"
+	"sync"
+
 	"github.com/zeromicro/go-zero/core/limit"
-	"github.com/zeromicro/go-zero/core/logx"
 	"github.com/zeromicro/go-zero/core/stores/redis"
 )
 
 const (
-	minutePeriod = 60
-	minuteQuota  = 5000
+	burst       = 2
+	minute      = 60
+	hour        = 3600
+	minuteQuota = 5000
+	hourQuota   = 150000
 
-	hourPeriod = 3600
-	hourQuota  = 150000
-
-	minuteKeyPreFix = "wechat:period:second:limit:"
-	hourKeyPreFix   = "wechat:period:hour:limit:"
+	minuteKey = "wechat:token:second:limit:%s"
+	hourKey   = "wechat:token:hour:limit:%s"
 )
 
-type WechatPeriodLimit struct {
-	MinuteLimit *limit.PeriodLimit
-	HourLimit   *limit.PeriodLimit
+type (
+	WechatTokenLimit struct {
+		limiters map[string]*WechatLimiter
+		redis    *redis.Redis
+	}
+	WechatLimiter [2]*limit.TokenLimiter
+)
+
+var (
+	wl       *WechatTokenLimit
+	wlOnce   sync.Once
+	keyQuota = map[string][2]int{
+		"all":          {minuteQuota, hourQuota},
+		"external_tag": {5000, 50000},
+	}
+)
+
+func NewTokenWechatLimit(r *redis.Redis) *WechatTokenLimit {
+
+	wlOnce.Do(func() {
+		wl = &WechatTokenLimit{
+			limiters: make(map[string]*WechatLimiter),
+			redis:    r,
+		}
+		for k, q := range keyQuota {
+			minuteBurst := q[0] / burst
+			minuteRate := minuteBurst / minute
+
+			hourBurst := q[1] / burst
+			hourRate := hourBurst / hour
+
+			ml := limit.NewTokenLimiter(minuteRate, minuteBurst, r, fmt.Sprintf(minuteKey, k))
+			hl := limit.NewTokenLimiter(hourRate, hourBurst, r, fmt.Sprintf(hourKey, k))
+			wl.limiters[k] = &WechatLimiter{ml, hl}
+		}
+	})
+
+	return wl
 }
 
-func NewWechatPeriodLimit(redis *redis.Redis) *WechatPeriodLimit {
-	ml := limit.NewPeriodLimit(minutePeriod, minuteQuota, redis, minuteKeyPreFix)
-	hl := limit.NewPeriodLimit(hourPeriod, hourQuota, redis, hourKeyPreFix)
-
-	return &WechatPeriodLimit{
-		MinuteLimit: ml,
-		HourLimit:   hl,
-	}
-}
-
-func (wl *WechatPeriodLimit) Take(key string) bool {
-	secondCode, secondErr := wl.MinuteLimit.Take(key)
-	hourCode, hourErr := wl.HourLimit.Take(key)
-	if secondErr != nil {
-		logx.Errorf(`WechatLimit secondErr: %v`, secondErr)
-	}
-	if hourErr != nil {
-		logx.Errorf(`WechatLimit hourErr: %v`, secondErr)
-	}
-	if secondCode == limit.OverQuota {
-		logx.Infof(`WechatLimit secondKey: %s`, key)
+func (wl *WechatTokenLimit) Allow(k string) bool {
+	l, ok := wl.limiters[k]
+	if !ok {
 		return false
 	}
-	if hourCode == limit.OverQuota {
-		logx.Infof(`WechatLimit hourKey: %s`, key)
-		return false
+	for _, limiter := range l {
+		if !limiter.Allow() {
+			return false
+		}
 	}
 	return true
 }

@@ -9,10 +9,10 @@ require (
 	github.com/json-iterator/go v1.1.12
 	github.com/spf13/cobra v1.8.1
 	github.com/zeromicro/go-queue v1.2.2
-	github.com/zeromicro/go-zero v1.7.0
-	github.com/zhuud/go-library v0.0.0-20240828073204-0777828497e6
+	github.com/zeromicro/go-zero v1.7.1
+	github.com/zhuud/go-library v0.0.0-20240830110627-4d1d71ab12b9
 	go.uber.org/automaxprocs v1.5.3
-	google.golang.org/grpc v1.65.0
+	google.golang.org/grpc v1.66.0
 	google.golang.org/protobuf v1.34.2
 )
 

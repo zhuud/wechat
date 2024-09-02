@@ -30,6 +30,11 @@ Log:
   Path: ../../deploy/log/rpc
   KeepDays: 180
   Rotation: daily
+Alarm:
+  FSAppId: cli_a0b61445cf78d00c
+  FsAppSecret: fuJ4u8qVYubqh1ltdbxJOgGluDX1v1Ah
+  FsReceiveIdType: chat_id
+  FsReceiveId: oc_060d34dd3886beba4297817ff851c05f
 
 # http配置
 FastHttp:

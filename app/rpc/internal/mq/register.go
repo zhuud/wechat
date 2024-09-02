@@ -1,6 +1,7 @@
 package mq
 
 import (
+	"github.com/zeromicro/go-zero/core/logx"
 	"rpc/internal/config"
 	"rpc/internal/mq/externalcontactuser"
 	"rpc/internal/svc"
@@ -9,6 +10,9 @@ import (
 )
 
 func RegisterMq(c config.Config, svcCtx *svc.ServiceContext) []*cobra.Command {
+	defer func() {
+		_ = logx.Close()
+	}()
 
 	return []*cobra.Command{
 		{

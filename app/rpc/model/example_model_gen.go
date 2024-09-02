@@ -5,12 +5,12 @@ package model
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"fmt"
 	"strings"
 	"time"
 
 	"github.com/Masterminds/squirrel"
-	"github.com/pkg/errors"
 	"github.com/zeromicro/go-zero/core/stores/builder"
 	"github.com/zeromicro/go-zero/core/stores/cache"
 	"github.com/zeromicro/go-zero/core/stores/sqlc"
@@ -161,7 +161,7 @@ func (m *defaultHomestayOrderModel) Update(ctx context.Context, session sqlx.Ses
 func (m *defaultHomestayOrderModel) FindSum(ctx context.Context, builder squirrel.SelectBuilder, field string) (float64, error) {
 
 	if len(field) == 0 {
-		return 0, errors.Wrapf(errors.New("FindSum Least One Field"), "FindSum Least One Field")
+		return 0, errors.New("")
 	}
 
 	builder = builder.Columns("IFNULL(SUM(" + field + "),0)")
@@ -184,7 +184,7 @@ func (m *defaultHomestayOrderModel) FindSum(ctx context.Context, builder squirre
 func (m *defaultHomestayOrderModel) FindCount(ctx context.Context, builder squirrel.SelectBuilder, field string) (int64, error) {
 
 	if len(field) == 0 {
-		return 0, errors.Wrapf(errors.New("FindCount Least One Field"), "FindCount Least One Field")
+		return 0, errors.New("")
 	}
 
 	builder = builder.Columns("COUNT(" + field + ")")

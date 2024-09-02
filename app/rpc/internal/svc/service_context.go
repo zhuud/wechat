@@ -20,13 +20,14 @@ type ServiceContext struct {
 	Redis      *redis.Redis      // redis
 	LocalCache *collection.Cache // local cache
 
-	WeCom       *WeCom             // 企微api
-	WechatLimit *WechatPeriodLimit // 企微限流
+	WeCom       *WeCom            // 企微api
+	WechatLimit *WechatTokenLimit // 企微限流
 
 	// model
 	ModelExternalUser                model.TbExternalUserModel
 	ModelExternalUserFollow          model.TbExternalUserFollowModel
 	ModelExternalUserFollowAttribute model.TbExternalUserFollowAttributeModel
+	ModelUserServiceQrcodeModel      model.UserServiceQrcodeModel
 }
 
 var (
@@ -57,12 +58,13 @@ func NewServiceContext(c config.Config) *ServiceContext {
 			// wecom
 			WeCom: NewWeCom(c.WeCom, c.CacheRedis),
 			// limit
-			WechatLimit: NewWechatPeriodLimit(redisConn),
+			WechatLimit: NewTokenWechatLimit(redisConn),
 
 			// model
 			ModelExternalUser:                model.NewTbExternalUserModel(msyqlConn, c.ModelRedis),
 			ModelExternalUserFollow:          model.NewTbExternalUserFollowModel(msyqlConn, c.ModelRedis),
 			ModelExternalUserFollowAttribute: model.NewTbExternalUserFollowAttributeModel(msyqlConn, c.ModelRedis),
+			ModelUserServiceQrcodeModel:      model.NewUserServiceQrcodeModel(msyqlConn),
 		}
 	})
 
@@ -71,7 +73,7 @@ func NewServiceContext(c config.Config) *ServiceContext {
 
 func GetSvcCtx() *ServiceContext {
 	if ctx == nil {
-		log.Fatalf("svc.GetSvcCtx is nil")
+		log.Fatalf("svc.GetSvcCtx is nil, use NewServiceContext before")
 	}
 	return ctx
 }
