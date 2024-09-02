@@ -1,4 +1,4 @@
-package userserviceqrcode
+package externalcontactway
 
 import (
 	"context"
@@ -54,19 +54,19 @@ func (s *UserServiceQrcodeCmd) UserServiceQrcode(c *cobra.Command, args []string
 		for _, item := range list.ContactWayIDs {
 
 			configId := item.ConfigID
-			configData,err := svcCtx.WeCom.WithCorp("yx").ContactWay.Get(context.Background(), configId)
-			if err != nil || configData.ContactWay == nil{
+			configData, err := svcCtx.WeCom.WithCorp("yx").ContactWay.Get(context.Background(), configId)
+			if err != nil || configData.ContactWay == nil {
 				logx.Error(err)
 				continue
 			}
 			svcCtx.ModelUserServiceQrcodeModel.Insert(s.ctx, &model.UserServiceQrcode{
 				ConfigId:  configId,
-				Type: int64(configData.ContactWay.Type),
-				Scene: int64(configData.ContactWay.Scene),
-				State: configData.ContactWay.State,
-				QrCode: configData.ContactWay.QrCode,
-				Remark: configData.ContactWay.Remark,
-				Style: int64(configData.ContactWay.Style),
+				Type:      int64(configData.ContactWay.Type),
+				Scene:     int64(configData.ContactWay.Scene),
+				State:     configData.ContactWay.State,
+				QrCode:    configData.ContactWay.QrCode,
+				Remark:    configData.ContactWay.Remark,
+				Style:     int64(configData.ContactWay.Style),
 				ExpiresIn: int64(configData.ContactWay.ExpiresIn),
 			})
 		}
@@ -78,6 +78,6 @@ func (s *UserServiceQrcodeCmd) UserServiceQrcode(c *cobra.Command, args []string
 			logx.Error(err)
 		}
 	}
-	
+
 	return nil
 }
