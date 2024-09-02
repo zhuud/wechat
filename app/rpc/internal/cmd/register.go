@@ -4,6 +4,7 @@ import (
 	"log"
 
 	"rpc/internal/cmd/externalcontactuser"
+	"rpc/internal/cmd/userserviceqrcode"
 	"rpc/internal/config"
 	"rpc/internal/svc"
 
@@ -20,6 +21,10 @@ func RegisterCmd(c config.Config, svcCtx *svc.ServiceContext) []*cobra.Command {
 		{
 			Use:  "CmdSyncExternalUser",
 			RunE: externalcontactuser.NewSyncExternalUserCmd(svcCtx),
+		},
+		{
+			Use:  "CmdUserServiceQrcodeSync",
+			RunE: userserviceqrcode.NewUserServiceQrcodeCmd(svcCtx).UserServiceQrcode,
 		},
 	}
 }
