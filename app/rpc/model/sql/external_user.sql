@@ -51,7 +51,7 @@ CREATE TABLE `tb_external_user_follow_attribute` (
   `userid` varchar(100) NOT NULL DEFAULT '' COMMENT '联系人的userid | 2020-09-10',
 
   `attribute_type` tinyint(3) unsigned NOT NULL DEFAULT '0' COMMENT '类型 1:备注标签 / 2:视频号信息 | 2020-09-10',
-  `attribute_value`  int(11) unsigned) NOT NULL DEFAULT '0' COMMENT '类型值 | 2020-09-10',
+  `attribute_value`  int(11) unsigned NOT NULL DEFAULT '0' COMMENT '类型值 | 2020-09-10',
   `extension` varchar(500) NOT NULL DEFAULT '' COMMENT '扩展信息 | 2020-09-10',
 
   `status` tinyint(3) unsigned NOT NULL DEFAULT '1' COMMENT '状态 (0:删除,1:正常) | 2020-09-10',
@@ -68,7 +68,7 @@ CREATE TABLE `tb_external_user_tag` (
   `group_id`   varchar(50) NOT NULL DEFAULT '' COMMENT '标签组id | 2020-09-10',
   `group_name`   varchar(50) NOT NULL DEFAULT '' COMMENT '标签组名字 | 2020-09-10',
   `name` varchar(100) NOT NULL DEFAULT '' COMMENT '标签名字 | 2020-09-10',
-  `weight` int(11) unsignedNOT NULL DEFAULT '' COMMENT '排序的次序值，order值大的排序靠前 微信为order关键字 | 2020-09-10',
+  `weight` int(11) unsigned NOT NULL DEFAULT '' COMMENT '排序的次序值，order值大的排序靠前 微信为order关键字 | 2020-09-10',
   `status` tinyint(3) unsigned NOT NULL DEFAULT '1' COMMENT '状态 (0:删除,1:正常) | 2020-09-10',
   `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间 | 2020-09-10',
   `updated_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间 | 2020-09-10',
@@ -93,6 +93,6 @@ CREATE TABLE `tb_user` (
   `status` tinyint(3) unsigned NOT NULL DEFAULT '1' COMMENT '状态 (0:删除,1:正常) | 2020-09-10',
   `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间 | 2020-09-10',
   `updated_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间 | 2020-09-10',
-  PRIMARY KEY (`external_userid`),
+  PRIMARY KEY (`userid`),
   KEY `idx_unionid` (`unionid`)
 ) ENGINE=InnoDB COMMENT='外部联系人属性表(attribute_type为业务枚举) | 2020-09-10';
