@@ -25,7 +25,9 @@ func NewExternalUserInfoLogic(ctx context.Context, svcCtx *svc.ServiceContext) *
 }
 
 func (l *ExternalUserInfoLogic) ExternalUserInfo(req *types.ExternalUserRequest) (resp *types.Response, err error) {
+
     // todo: add your logic here and delete this line
+    
 
     return
 }

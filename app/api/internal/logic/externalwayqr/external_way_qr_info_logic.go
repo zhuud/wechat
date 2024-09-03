@@ -6,6 +6,8 @@ import (
 	"api/internal/svc"
 	"api/internal/types"
 
+	"rpc/client/externalcontactway"
+
 	"github.com/zeromicro/go-zero/core/logx"
 )
 
@@ -25,7 +27,11 @@ func NewExternalWayQrInfoLogic(ctx context.Context, svcCtx *svc.ServiceContext) 
 }
 
 func (l *ExternalWayQrInfoLogic) ExternalWayQrInfo(req *types.ExternalWayQrInfoRequest) (resp *types.Response, err error) {
-	// todo: add your logic here and delete this line
-
-	return
+	data, err := l.svcCtx.ExternalcontactwayRpc.GetExternalContactWayInfo(l.ctx, &externalcontactway.ExternalContactWayReq{
+		ConfigId: req.ConfigId,
+	})
+	resp = &types.Response{
+		Data: data,
+	}
+	return resp, err
 }

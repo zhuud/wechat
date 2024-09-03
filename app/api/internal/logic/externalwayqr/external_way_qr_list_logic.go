@@ -2,6 +2,7 @@ package externalwayqr
 
 import (
 	"context"
+	"rpc/client/externalcontactway"
 
 	"api/internal/svc"
 	"api/internal/types"
@@ -25,7 +26,15 @@ func NewExternalWayQrListLogic(ctx context.Context, svcCtx *svc.ServiceContext) 
 }
 
 func (l *ExternalWayQrListLogic) ExternalWayQrList(req *types.ExternalWayQrListRequest) (resp *types.Response, err error) {
-	// todo: add your logic here and delete this line
+	data, err := l.svcCtx.ExternalcontactwayRpc.GetExternalContactWayList(l.ctx, &externalcontactway.ExternalContactWayListReq{
+		StartTime: req.StartTime,
+		EndTime:   req.EndTime,
+		Limit: req.Limit,
+		Cursor: req.Cursor,
+	})
+	resp = &types.Response{
+		Data: data,
+	}
+	return resp, err
 
-	return
 }
