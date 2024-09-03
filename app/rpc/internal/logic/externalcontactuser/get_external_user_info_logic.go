@@ -3,6 +3,7 @@ package externalcontactuserlogic
 import (
 	"context"
 	jsoniter "github.com/json-iterator/go"
+	"rpc/internal/logic/externalcontactuser/user"
 	"rpc/internal/svc"
 	"rpc/wechat"
 	"sync"
@@ -32,7 +33,24 @@ func NewGetExternalUserInfoLogic(ctx context.Context, svcCtx *svc.ServiceContext
 	}
 }
 
-func (l *GetExternalUserInfoLogic) GetExternalUserInfo(in *wechat.ExternalUserInfoReq) (*wechat.ExternalUserInfoResp, error) {
+func (l *GetExternalUserInfoLogic) GetExternalUserInfo(in *wechat.ExternalUserInfoReq) (resp *wechat.ExternalUserInfoResp, err error) {
+	// 基础信息
+	userList, err := user.NewGetExternalUserCacheLogic(l.ctx, l.svcCtx).GetUserCache(in)
+	if err != nil || userList == nil || len(userList) == 0 {
+		return
+	}
+	// uint信息
+	user.NewGetExternalUserUnitLogic(l.ctx, l.svcCtx).GetUserUint(userList, in)
+
+	//list := map[string]*wechat.ExternalUserInfo{}
+	for _, externalUserId := range in.ExternalUseridList {
+		if _, ok := userList[externalUserId]; !ok {
+			continue
+		}
+
+	}
+
+	return nil, nil
 
 	externalUserList, err := l.svcCtx.ModelExternalUser.FindListByExternalUserid(l.ctx, in.ExternalUseridList)
 	if err != nil {

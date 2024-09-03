@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"github.com/zeromicro/go-zero/core/logx"
 	"log"
 
 	"rpc/internal/cmd/externalcontactuser"
@@ -16,6 +17,9 @@ func RegisterCmd(c config.Config, svcCtx *svc.ServiceContext) []*cobra.Command {
 	if err != nil {
 		log.Fatalf("cmd.RegisterCmd SetUp config:%v, error: %v", c, err)
 	}
+	defer func() {
+		_ = logx.Close()
+	}()
 
 	return []*cobra.Command{
 		{
