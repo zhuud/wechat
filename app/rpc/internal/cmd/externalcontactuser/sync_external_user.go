@@ -2,6 +2,8 @@ package externalcontactuser
 
 import (
 	"context"
+	"time"
+
 	"rpc/internal/svc"
 
 	"github.com/davecgh/go-spew/spew"
@@ -30,7 +32,8 @@ func newSyncExternalUserCmd(ctx context.Context, svcCtx *svc.ServiceContext) *sy
 }
 
 func (s *syncExternalUserCmd) Do(args []string) error {
-
+	st := time.Now()
+	logx.WithDuration(time.Since(st)).Info("hhh")
 	// do code ...
 	spew.Dump(args)
 	return nil

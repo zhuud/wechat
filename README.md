@@ -30,9 +30,47 @@ curl --location --request POST 'http://127.0.0.1:8080/externaluser/list' \
 https://go-zero.dev/docs/tutorials/cli/rpc  
 https://go-zero.dev/docs/tutorials/cli/api  
 https://go-zero.dev/docs/tutorials/cli/model  
+> goctl api go -api wechat.api -dir . --style=go_zero
+> goctl model mysql ddl --cache=true --style=go_zero --src=sql/external_user.sql
+> goctl rpc protoc wechat.proto  --go_out=. --go-grpc_out=. --zrpc_out=. -m --style go_zero
 
 > rpc client 全部目录都可以删除重新生成   
 > rpc server 目录register.go 要保留，其他都可以删除重新生成
 
 ### wechat sdk
 https://powerwechat.artisan-cloud.com/zh/wecom/contacts.html
+
+### 常用代码
+```
+# 协程组管理
+group := threading.NewRoutineGroup()
+...
+group.RunSafe(listener)
+...
+group.Wait()
+```
+```
+# 程序关闭注册
+proc.AddShutdownListener(func() {
+    client.Close()
+})
+```
+
+```
+# 批处理协程处理 定时定量执行
+executors.NewBulkExecutor(func(tasks []any) {
+    for _, task := range tasks {
+        ...
+    }
+}, bulkOpts...)
+```
+```
+# 熔断器
+brk := breaker.NewBreaker()
+brk.Do(req func() error) error
+```
+```
+# 日志耗时
+tn := time.Now()
+logx.WithDuration(time.Since(tn)).Info("hhh")
+```
