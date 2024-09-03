@@ -55,7 +55,6 @@ proc.AddShutdownListener(func() {
     client.Close()
 })
 ```
-
 ```
 # 批处理协程处理 定时定量执行
 executors.NewBulkExecutor(func(tasks []any) {
@@ -73,4 +72,26 @@ brk.Do(req func() error) error
 # 日志耗时
 tn := time.Now()
 logx.WithDuration(time.Since(tn)).Info("hhh")
+```
+```
+# 令牌桶限流
+svcCtx.WechatLimit.Allow("/externalUser/get")
+```
+```
+# 企微api sdk
+svcCtx.WeCom.WithCorp("yx").ContactWay.List(context.Background(), prasms)
+```
+```
+# 内存缓存
+svcCtx.LocalCache.Get("key")
+svcCtx.LocalCache.Set("key")
+```
+```
+# FastHttp client
+svcCtx.FastHttp.Get()
+svcCtx.FastHttp.Post()
+```
+```
+# Redis client
+svcCtx.Redis.Get("")
 ```
