@@ -7,6 +7,7 @@ import (
 
 	callback "api/internal/handler/callback"
 	externalcontactuser "api/internal/handler/externalcontactuser"
+	externalwayqr "api/internal/handler/externalwayqr"
 	"api/internal/svc"
 
 	"github.com/zeromicro/go-zero/rest"
@@ -41,8 +42,29 @@ func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
 				Handler: externalcontactuser.ExternalUserListHandler(serverCtx),
 			},
 		},
-		//rest.WithSignature(serverCtx.Config.Signature),
+		rest.WithSignature(serverCtx.Config.Signature),
 		rest.WithPrefix("/externaluser"),
+		rest.WithTimeout(2000*time.Millisecond),
+		rest.WithMaxBytes(1048576),
+	)
+
+	server.AddRoutes(
+		[]rest.Route{
+			{
+				// 企微联系人二维码详情
+				Method:  http.MethodPost,
+				Path:    "/info",
+				Handler: externalwayqr.ExternalWayQrInfoHandler(serverCtx),
+			},
+			{
+				// 企微联系人二维码列表
+				Method:  http.MethodPost,
+				Path:    "/list",
+				Handler: externalwayqr.ExternalWayQrListHandler(serverCtx),
+			},
+		},
+		rest.WithSignature(serverCtx.Config.Signature),
+		rest.WithPrefix("/externalwayqr"),
 		rest.WithTimeout(2000*time.Millisecond),
 		rest.WithMaxBytes(1048576),
 	)
