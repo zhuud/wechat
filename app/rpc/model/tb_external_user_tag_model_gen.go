@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/zeromicro/go-zero/core/stores/builder"
+	"github.com/zeromicro/go-zero/core/stores/cache"
 	"github.com/zeromicro/go-zero/core/stores/sqlc"
 	"github.com/zeromicro/go-zero/core/stores/sqlx"
 	"github.com/zeromicro/go-zero/core/stringx"
@@ -20,6 +21,8 @@ var (
 	tbExternalUserTagRows                = strings.Join(tbExternalUserTagFieldNames, ",")
 	tbExternalUserTagRowsExpectAutoSet   = strings.Join(stringx.Remove(tbExternalUserTagFieldNames, "`create_at`", "`create_time`", "`created_at`", "`update_at`", "`update_time`", "`updated_at`"), ",")
 	tbExternalUserTagRowsWithPlaceHolder = strings.Join(stringx.Remove(tbExternalUserTagFieldNames, "`tag_id`", "`create_at`", "`create_time`", "`created_at`", "`update_at`", "`update_time`", "`updated_at`"), "=?,") + "=?"
+
+	cacheTbExternalUserTagTagIdPrefix = "cache:tbExternalUserTag:tagId:"
 )
 
 type (
@@ -31,7 +34,7 @@ type (
 	}
 
 	defaultTbExternalUserTagModel struct {
-		conn  sqlx.SqlConn
+		sqlc.CachedConn
 		table string
 	}
 
@@ -40,30 +43,36 @@ type (
 		GroupId   string    `db:"group_id"`   // 标签组id | 2020-09-10
 		GroupName string    `db:"group_name"` // 标签组名字 | 2020-09-10
 		Name      string    `db:"name"`       // 标签名字 | 2020-09-10
-		Weight    int64     `db:"weight"`     // 排序的次序值，order值大的排序靠前 微信为order关键字 | 2020-09-10
-		Status    int64     `db:"status"`     // 状态 (0:删除,1:正常) | 2020-09-10
+		Weight    uint64    `db:"weight"`     // 排序的次序值，order值大的排序靠前 微信为order关键字 | 2020-09-10
+		Status    uint64    `db:"status"`     // 状态 (0:删除,1:正常) | 2020-09-10
 		CreatedAt time.Time `db:"created_at"` // 创建时间 | 2020-09-10
 		UpdatedAt time.Time `db:"updated_at"` // 更新时间 | 2020-09-10
 	}
 )
 
-func newTbExternalUserTagModel(conn sqlx.SqlConn) *defaultTbExternalUserTagModel {
+func newTbExternalUserTagModel(conn sqlx.SqlConn, c cache.CacheConf, opts ...cache.Option) *defaultTbExternalUserTagModel {
 	return &defaultTbExternalUserTagModel{
-		conn:  conn,
-		table: "`tb_external_user_tag`",
+		CachedConn: sqlc.NewConn(conn, c, opts...),
+		table:      "`tb_external_user_tag`",
 	}
 }
 
 func (m *defaultTbExternalUserTagModel) Delete(ctx context.Context, tagId string) error {
-	query := fmt.Sprintf("delete from %s where `tag_id` = ?", m.table)
-	_, err := m.conn.ExecCtx(ctx, query, tagId)
+	tbExternalUserTagTagIdKey := fmt.Sprintf("%s%v", cacheTbExternalUserTagTagIdPrefix, tagId)
+	_, err := m.ExecCtx(ctx, func(ctx context.Context, conn sqlx.SqlConn) (result sql.Result, err error) {
+		query := fmt.Sprintf("delete from %s where `tag_id` = ?", m.table)
+		return conn.ExecCtx(ctx, query, tagId)
+	}, tbExternalUserTagTagIdKey)
 	return err
 }
 
 func (m *defaultTbExternalUserTagModel) FindOne(ctx context.Context, tagId string) (*TbExternalUserTag, error) {
-	query := fmt.Sprintf("select %s from %s where `tag_id` = ? limit 1", tbExternalUserTagRows, m.table)
+	tbExternalUserTagTagIdKey := fmt.Sprintf("%s%v", cacheTbExternalUserTagTagIdPrefix, tagId)
 	var resp TbExternalUserTag
-	err := m.conn.QueryRowCtx(ctx, &resp, query, tagId)
+	err := m.QueryRowCtx(ctx, &resp, tbExternalUserTagTagIdKey, func(ctx context.Context, conn sqlx.SqlConn, v any) error {
+		query := fmt.Sprintf("select %s from %s where `tag_id` = ? limit 1", tbExternalUserTagRows, m.table)
+		return conn.QueryRowCtx(ctx, v, query, tagId)
+	})
 	switch err {
 	case nil:
 		return &resp, nil
@@ -75,15 +84,30 @@ func (m *defaultTbExternalUserTagModel) FindOne(ctx context.Context, tagId strin
 }
 
 func (m *defaultTbExternalUserTagModel) Insert(ctx context.Context, data *TbExternalUserTag) (sql.Result, error) {
-	query := fmt.Sprintf("insert into %s (%s) values (?, ?, ?, ?, ?, ?)", m.table, tbExternalUserTagRowsExpectAutoSet)
-	ret, err := m.conn.ExecCtx(ctx, query, data.TagId, data.GroupId, data.GroupName, data.Name, data.Weight, data.Status)
+	tbExternalUserTagTagIdKey := fmt.Sprintf("%s%v", cacheTbExternalUserTagTagIdPrefix, data.TagId)
+	ret, err := m.ExecCtx(ctx, func(ctx context.Context, conn sqlx.SqlConn) (result sql.Result, err error) {
+		query := fmt.Sprintf("insert into %s (%s) values (?, ?, ?, ?, ?, ?)", m.table, tbExternalUserTagRowsExpectAutoSet)
+		return conn.ExecCtx(ctx, query, data.TagId, data.GroupId, data.GroupName, data.Name, data.Weight, data.Status)
+	}, tbExternalUserTagTagIdKey)
 	return ret, err
 }
 
 func (m *defaultTbExternalUserTagModel) Update(ctx context.Context, data *TbExternalUserTag) error {
-	query := fmt.Sprintf("update %s set %s where `tag_id` = ?", m.table, tbExternalUserTagRowsWithPlaceHolder)
-	_, err := m.conn.ExecCtx(ctx, query, data.GroupId, data.GroupName, data.Name, data.Weight, data.Status, data.TagId)
+	tbExternalUserTagTagIdKey := fmt.Sprintf("%s%v", cacheTbExternalUserTagTagIdPrefix, data.TagId)
+	_, err := m.ExecCtx(ctx, func(ctx context.Context, conn sqlx.SqlConn) (result sql.Result, err error) {
+		query := fmt.Sprintf("update %s set %s where `tag_id` = ?", m.table, tbExternalUserTagRowsWithPlaceHolder)
+		return conn.ExecCtx(ctx, query, data.GroupId, data.GroupName, data.Name, data.Weight, data.Status, data.TagId)
+	}, tbExternalUserTagTagIdKey)
 	return err
+}
+
+func (m *defaultTbExternalUserTagModel) formatPrimary(primary any) string {
+	return fmt.Sprintf("%s%v", cacheTbExternalUserTagTagIdPrefix, primary)
+}
+
+func (m *defaultTbExternalUserTagModel) queryPrimary(ctx context.Context, conn sqlx.SqlConn, v, primary any) error {
+	query := fmt.Sprintf("select %s from %s where `tag_id` = ? limit 1", tbExternalUserTagRows, m.table)
+	return conn.QueryRowCtx(ctx, v, query, primary)
 }
 
 func (m *defaultTbExternalUserTagModel) tableName() string {
