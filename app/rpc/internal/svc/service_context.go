@@ -28,6 +28,7 @@ type ServiceContext struct {
 	ModelExternalUserFollow          model.TbExternalUserFollowModel
 	ModelExternalUserFollowAttribute model.TbExternalUserFollowAttributeModel
 	ModelUserServiceQrcodeModel      model.UserServiceQrcodeModel
+	ModelExternalUserTag             model.TbExternalUserTagModel
 }
 
 var (
