@@ -20,8 +20,7 @@ CREATE TABLE user_service_qrcode
     `updated_at`      datetime     NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间 | 2020-09-10',
     PRIMARY KEY (`id`)
 )ENGINE = InnoDB COMMENT = '企业微信客服二维码信息| 2020-09-10';
-*
-/
+
 
 CREATE TABLE `tb_user_service_qrcode_conclusions`
 (
