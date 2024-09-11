@@ -26,7 +26,7 @@ func NewGetExternalUserFollowLogic(ctx context.Context, svcCtx *svc.ServiceConte
  * 外部联系人属性表
  */
 func (t *GetExternalUserFollowLogic) GetUserFollowListByExternalUserIdList(externalUserIdList []string) (externalUserListMap map[string][]*wechat.ExternalUserFollowUser, err error) {
-	externalUserFollowList, err := t.svcCtx.ModelExternalUserFollow.FindListByExternalUserid(t.ctx, externalUserIdList)
+	externalUserFollowList, err := t.svcCtx.ModelExternalUserFollow.FindListByExternalUserId(t.ctx, externalUserIdList)
 	if err != nil {
 		return externalUserListMap, err
 	}

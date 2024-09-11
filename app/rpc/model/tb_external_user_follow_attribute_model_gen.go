@@ -43,7 +43,7 @@ type (
 		ExternalUserid string    `db:"external_userid"` // 外部联系人的userid | 2020-09-10
 		Userid         string    `db:"userid"`          // 联系人的userid | 2020-09-10
 		AttributeType  uint64    `db:"attribute_type"`  // 类型 1:备注标签 / 2:视频号信息 | 2020-09-10
-		AttributeValue uint64    `db:"attribute_value"` // 类型值 | 2020-09-10
+		AttributeValue string    `db:"attribute_value"` // 类型值 | 2020-09-10
 		Extension      string    `db:"extension"`       // 扩展信息 | 2020-09-10
 		Status         uint64    `db:"status"`          // 状态 (0:删除,1:正常) | 2020-09-10
 		CreatedAt      time.Time `db:"created_at"`      // 创建时间 | 2020-09-10
