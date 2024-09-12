@@ -15,6 +15,17 @@ type ExternalUserRequest struct {
 	UnionidList        []string `json:"unionid_list,optional"`
 }
 
+type ExternalWayQrInfoRequest struct {
+	ConfigId string
+}
+
+type ExternalWayQrListRequest struct {
+	StartTime int32
+	EndTime   int32
+	Cursor    string
+	Limit     int32
+}
+
 type Request struct {
 }
 

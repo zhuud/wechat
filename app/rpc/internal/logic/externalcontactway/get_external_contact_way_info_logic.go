@@ -26,5 +26,26 @@ func NewGetExternalContactWayInfoLogic(ctx context.Context, svcCtx *svc.ServiceC
 func (l *GetExternalContactWayInfoLogic) GetExternalContactWayInfo(in *wechat.ExternalContactWayReq) (*wechat.ExternalContactWayInfoResp, error) {
 	// todo: add your logic here and delete this line
 
-	return &wechat.ExternalContactWayInfoResp{}, nil
+	configData, err := l.svcCtx.WeCom.WithCorp("yx").ContactWay.Get(context.Background(), in.ConfigId)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &wechat.ExternalContactWayInfoResp{
+		ContactWay: &wechat.ExternalContactWayData{
+			ConfigId:      configData.ContactWay.ConfigID,
+			QrCode:        configData.ContactWay.QrCode,
+			Type:          int32(configData.ContactWay.Type),
+			Scene:         int32(configData.ContactWay.Scene),
+			User:          configData.ContactWay.User,
+			IsTemp:        configData.ContactWay.IsTemp,
+			ExpiresIn:     int32(configData.ContactWay.ExpiresIn),
+			ChatExpiresIn: int32(configData.ContactWay.ChatExpiresIn),
+			Unionid:       configData.ContactWay.UnionID,
+			Conclusions:   &wechat.ExternalContactWayConclusion{
+
+			},
+		},
+	}, nil
 }
