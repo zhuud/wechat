@@ -15,6 +15,7 @@ CREATE TABLE user_service_qrcode
     `expires_in`      INT          NOT NULL DEFAULT 86400 COMMENT '临时会话二维码有效期，以秒为单位',
     `chat_expires_in` INT          NOT NULL DEFAULT 86400 COMMENT '临时会话有效期，以秒为单位',
     `unionid`         VARCHAR(255) NOT NULL DEFAULT '' COMMENT '可进行临时会话的客户unionid',
+    `is_exclusive`    tinyint(1) NOT NULL DEFAULT true COMMENT '0-否 1-是；是否开启同一外部企业客户只能添加同一个员工，默认为否，开启后，同一个企业的客户会优先添加到同一个跟进人',
     `status`          tinyint(3) unsigned NOT NULL DEFAULT '1' COMMENT '状态 (0:删除,1:正常) | 2020-09-10',
     `created_at`      datetime     NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间 | 2020-09-10',
     `updated_at`      datetime     NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间 | 2020-09-10',

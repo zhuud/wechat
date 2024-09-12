@@ -50,6 +50,7 @@ type (
 		ExpiresIn     int64     `db:"expires_in"`      // 临时会话二维码有效期，以秒为单位
 		ChatExpiresIn int64     `db:"chat_expires_in"` // 临时会话有效期，以秒为单位
 		Unionid       string    `db:"unionid"`         // 可进行临时会话的客户unionid
+		IsExclusive        int64     `db:"is_exclusive"`         // 0-否 1-是；是否开启同一外部企业客户只能添加同一个员工
 		Status        uint64    `db:"status"`          // 状态 (0:删除,1:正常) | 2020-09-10
 		CreatedAt     time.Time `db:"created_at"`      // 创建时间 | 2020-09-10
 		UpdatedAt     time.Time `db:"updated_at"`      // 更新时间 | 2020-09-10
