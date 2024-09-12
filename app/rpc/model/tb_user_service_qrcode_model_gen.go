@@ -41,7 +41,7 @@ type (
 		Scene         int64     `db:"scene"`           // 场景，1-在小程序中联系，2-通过二维码联系
 		Style         int64     `db:"style"`           // 小程序中联系按钮的样式，仅在scene为1时返回，详见附录
 		Remark        string    `db:"remark"`          // 联系方式的备注信息，用于助记
-		SkipVerify    bool      `db:"skip_verify"`     // 外部客户添加时是否无需验证
+		SkipVerify    int64     `db:"skip_verify"`     // 外部客户添加时是否无需验证 0-否 1-是
 		State         string    `db:"state"`           // 企业自定义的state参数，用于区分不同的添加渠道
 		QrCode        string    `db:"qr_code"`         // 联系二维码的URL，仅在scene为2时返回
 		User          string    `db:"user"`            // 使用该联系方式的用户userID列表
@@ -50,7 +50,7 @@ type (
 		ExpiresIn     int64     `db:"expires_in"`      // 临时会话二维码有效期，以秒为单位
 		ChatExpiresIn int64     `db:"chat_expires_in"` // 临时会话有效期，以秒为单位
 		Unionid       string    `db:"unionid"`         // 可进行临时会话的客户unionid
-		IsExclusive        int64     `db:"is_exclusive"`         // 0-否 1-是；是否开启同一外部企业客户只能添加同一个员工
+		IsExclusive   int64     `db:"is_exclusive"`    // 0-否 1-是；是否开启同一外部企业客户只能添加同一个员工
 		Status        uint64    `db:"status"`          // 状态 (0:删除,1:正常) | 2020-09-10
 		CreatedAt     time.Time `db:"created_at"`      // 创建时间 | 2020-09-10
 		UpdatedAt     time.Time `db:"updated_at"`      // 更新时间 | 2020-09-10
@@ -60,7 +60,7 @@ type (
 func newUserServiceQrcodeModel(conn sqlx.SqlConn) *defaultUserServiceQrcodeModel {
 	return &defaultUserServiceQrcodeModel{
 		conn:  conn,
-		table: "`user_service_qrcode`",
+		table: "`tb_user_service_qrcode`",
 	}
 }
 
