@@ -26,11 +26,12 @@ func NewExternalWayQrListLogic(ctx context.Context, svcCtx *svc.ServiceContext) 
 }
 
 func (l *ExternalWayQrListLogic) ExternalWayQrList(req *types.ExternalWayQrListRequest) (resp *types.Response, err error) {
+
 	data, err := l.svcCtx.ExternalcontactwayRpc.GetExternalContactWayList(l.ctx, &externalcontactway.ExternalContactWayListReq{
 		StartTime: req.StartTime,
 		EndTime:   req.EndTime,
-		Limit: req.Limit,
-		Cursor: req.Cursor,
+		Limit:     10,
+		Cursor:    req.Cursor,
 	})
 	resp = &types.Response{
 		Data: data,

@@ -16,17 +16,17 @@ DevServer:
   EnablePprof: true
 
 # 是否打印详细日志
-Verbose: true
-Log:
-  ServiceName: wechat-api
-  Level: info
-  Stat: true
-  Compress: false # 是否压缩日志
-  StackCooldownMillis: 1000   # 堆栈打印冷却时间
-  Mode: file
-  Path: ../../deploy/log/api
-  KeepDays: 180
-  Rotation: daily
+#Verbose: true
+#Log:
+#  ServiceName: wechat-api
+#  Level: info
+#  Stat: true
+#  Compress: false # 是否压缩日志
+#  StackCooldownMillis: 1000 # 堆栈打印冷却时间
+  # Mode: file
+  # Path: ../../deploy/log/api
+  # KeepDays: 180
+  # Rotation: daily
 
 # 链路追踪
 Telemetry:
@@ -43,9 +43,8 @@ Telemetry:
 #  Expiry: "1h"
 #  Strict: false
 
-
 WechatRpc:
   Endpoints:
     - 127.0.0.1:9527
   Timeout: 3000
-  NonBlock: false  # 是否阻塞模式
+  NonBlock: false # 是否阻塞模式

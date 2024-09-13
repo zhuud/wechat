@@ -20,10 +20,10 @@ type ExternalWayQrInfoRequest struct {
 }
 
 type ExternalWayQrListRequest struct {
-	StartTime int32
-	EndTime   int32
-	Cursor    string
-	Limit     int32
+	StartTime int32 `json:"start_time,optional"`
+	EndTime   int32 `json:"end_time,optional"`
+	Cursor    string `json:"cursor,optional"`
+	Limit     int32 `json:"limit,optional"`
 }
 
 type Request struct {
