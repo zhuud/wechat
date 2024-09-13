@@ -16,7 +16,7 @@ type ExternalUserRequest struct {
 }
 
 type ExternalWayQrInfoRequest struct {
-	ConfigId string
+	ConfigId string `json:"config_id"`
 }
 
 type ExternalWayQrListRequest struct {

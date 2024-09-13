@@ -30,7 +30,7 @@ func (l *ExternalWayQrListLogic) ExternalWayQrList(req *types.ExternalWayQrListR
 	data, err := l.svcCtx.ExternalcontactwayRpc.GetExternalContactWayList(l.ctx, &externalcontactway.ExternalContactWayListReq{
 		StartTime: req.StartTime,
 		EndTime:   req.EndTime,
-		Limit:     10,
+		Limit:     req.Limit,
 		Cursor:    req.Cursor,
 	})
 	resp = &types.Response{

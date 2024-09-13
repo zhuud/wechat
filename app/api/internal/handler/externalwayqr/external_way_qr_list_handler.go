@@ -1,7 +1,6 @@
 package externalwayqr
 
 import (
-	"fmt"
 	"net/http"
 
 	"api/internal/logic/externalwayqr"
@@ -16,13 +15,10 @@ func ExternalWayQrListHandler(svcCtx *svc.ServiceContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var req types.ExternalWayQrListRequest
 
-		fmt.Println("req", r)
-
 		if err := httpx.Parse(r, &req); err != nil {
 			httpx.ErrorCtx(r.Context(), w, err)
 			return
 		}
-
 
 		l := externalwayqr.NewExternalWayQrListLogic(r.Context(), svcCtx)
 		resp, err := l.ExternalWayQrList(&req)
