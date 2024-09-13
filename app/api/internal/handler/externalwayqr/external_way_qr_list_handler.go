@@ -6,6 +6,7 @@ import (
 	"api/internal/logic/externalwayqr"
 	"api/internal/svc"
 	"api/internal/types"
+
 	"github.com/zeromicro/go-zero/rest/httpx"
 )
 
@@ -13,6 +14,7 @@ import (
 func ExternalWayQrListHandler(svcCtx *svc.ServiceContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var req types.ExternalWayQrListRequest
+
 		if err := httpx.Parse(r, &req); err != nil {
 			httpx.ErrorCtx(r.Context(), w, err)
 			return
