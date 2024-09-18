@@ -25,6 +25,7 @@ type (
 	userServiceQrcodeModel interface {
 		Insert(ctx context.Context, data *UserServiceQrcode) (sql.Result, error)
 		FindOne(ctx context.Context, id uint64) (*UserServiceQrcode, error)
+		FindOneByConfigId(ctx context.Context, configId string) (*UserServiceQrcode, error)
 		Update(ctx context.Context, data *UserServiceQrcode) error
 		Delete(ctx context.Context, id uint64) error
 	}
@@ -84,15 +85,29 @@ func (m *defaultUserServiceQrcodeModel) FindOne(ctx context.Context, id uint64) 
 	}
 }
 
+func (m *defaultUserServiceQrcodeModel) FindOneByConfigId(ctx context.Context, configId string) (*UserServiceQrcode, error) {
+	query := fmt.Sprintf("select %s from %s where `config_id` = ? limit 1", userServiceQrcodeRows, m.table)
+	var resp UserServiceQrcode
+	err := m.conn.QueryRowCtx(ctx, &resp, query, configId)
+	switch err {
+	case nil:
+		return &resp, nil
+	case sqlx.ErrNotFound:
+		return nil, ErrNotFound
+	default:
+		return nil, err
+	}
+}
+
 func (m *defaultUserServiceQrcodeModel) Insert(ctx context.Context, data *UserServiceQrcode) (sql.Result, error) {
-	query := fmt.Sprintf("insert into %s (%s) values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", m.table, userServiceQrcodeRowsExpectAutoSet)
-	ret, err := m.conn.ExecCtx(ctx, query, data.ConfigId, data.Type, data.Scene, data.Style, data.Remark, data.SkipVerify, data.State, data.QrCode, data.User, data.Party, data.IsTemp, data.ExpiresIn, data.ChatExpiresIn, data.Unionid, data.Status)
+	query := fmt.Sprintf("insert into %s (%s) values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", m.table, userServiceQrcodeRowsExpectAutoSet)
+	ret, err := m.conn.ExecCtx(ctx, query, data.ConfigId, data.Type, data.Scene, data.Style, data.Remark, data.SkipVerify, data.State, data.QrCode, data.User, data.Party, data.IsTemp, data.ExpiresIn, data.ChatExpiresIn, data.Unionid, data.IsExclusive, data.Status)
 	return ret, err
 }
 
 func (m *defaultUserServiceQrcodeModel) Update(ctx context.Context, data *UserServiceQrcode) error {
 	query := fmt.Sprintf("update %s set %s where `id` = ?", m.table, userServiceQrcodeRowsWithPlaceHolder)
-	_, err := m.conn.ExecCtx(ctx, query, data.ConfigId, data.Type, data.Scene, data.Style, data.Remark, data.SkipVerify, data.State, data.QrCode, data.User, data.Party, data.IsTemp, data.ExpiresIn, data.ChatExpiresIn, data.Unionid, data.Status, data.Id)
+	_, err := m.conn.ExecCtx(ctx, query, data.ConfigId, data.Type, data.Scene, data.Style, data.Remark, data.SkipVerify, data.State, data.QrCode, data.User, data.Party, data.IsTemp, data.ExpiresIn, data.ChatExpiresIn, data.Unionid, data.IsExclusive, data.Status, data.Id)
 	return err
 }
 
