@@ -60,17 +60,18 @@ func (t *GetExternalUserCacheLogic) GetUserCache(req *wechat.ExternalUserInfoReq
 	//diff 有缓存和没有缓存的数据
 	noCacheUserIdList := utils.ArrayDiff(req.ExternalUseridList, hasCacheUserId)
 
-	// 获取数据库信息
 	if len(noCacheUserIdList) == 0 {
 		return userToCacheUserList, err
 	}
 
+	// 获取数据库信息
 	userToDBUserList, err := t.getUserListByDB(t.ctx, req)
 	if err != nil {
 		t.Error(`getUserListByDB`, err)
 		return userToCacheUserList, err
 	}
 
+	//合并缓存和数据库的数据
 	userToUserList := t.mergePostListCacheDBMap(userToCacheUserList, userToDBUserList)
 
 	return userToUserList, err
@@ -102,7 +103,7 @@ func (t *GetExternalUserCacheLogic) getUserListByDB(ctx context.Context, req *we
 	}
 
 	externalUserIdList := req.ExternalUseridList
-	uf := t.GetUField(req)
+	uf := t.GetBaseField(req)
 
 	group := threading.NewRoutineGroup()
 
@@ -135,7 +136,7 @@ func (t *GetExternalUserCacheLogic) getUserListByDB(ctx context.Context, req *we
 	return
 }
 
-func (t *GetExternalUserCacheLogic) GetUField(req *wechat.ExternalUserInfoReq) []string {
+func (t *GetExternalUserCacheLogic) GetBaseField(req *wechat.ExternalUserInfoReq) []string {
 	uf := []string{`user`}
 	if req.Opt == nil {
 		return uf

@@ -7,6 +7,7 @@ import (
 	"github.com/zeromicro/go-zero/core/threading"
 	"rpc/internal/svc"
 	"rpc/internal/types"
+	"rpc/model"
 	"rpc/wechat"
 )
 
@@ -26,29 +27,33 @@ func NewGetExternalUserUnitLogic(ctx context.Context, svcCtx *svc.ServiceContext
 
 type unitIds struct {
 	RemarkTag []string
-	Video     []string
 }
 
-func (t *GetExternalUserUnitLogic) GetUserUint(externalUser map[string]*types.ExternalUser, in *wechat.ExternalUserInfoReq) {
+type UserUnit struct {
+	Tag   map[string]*model.TbExternalUserTag
+	Video map[string]*wechat.ExternalUserFollowUserWechatChannel
+}
+
+func (t *GetExternalUserUnitLogic) GetUserUint(externalUser map[string]*types.ExternalUser, in *wechat.ExternalUserInfoReq) (userUnit UserUnit) {
 	//记录入参日志
 	logc.Info(t.ctx, in, `params_unit`)
 
 	ids := t.builds(externalUser)
 
+	//需要查询的数据
+	uintOpt := t.getUField(ids)
+
 	// 并行处理数据读取
 	group := threading.NewRoutineGroup()
 
-	//获取要查询的字段
-	uintOpt := NewGetExternalUserCacheLogic(t.ctx, t.svcCtx).GetUField(in)
-
 	for _, unitField := range uintOpt {
 		group.RunSafe(func() {
-			t.getUnit(ids, unitField, externalUser)
+			t.getUnit(ids, unitField, externalUser, &userUnit)
 		})
 	}
 	group.Wait()
 
-	return
+	return userUnit
 
 }
 
@@ -65,15 +70,32 @@ func (t *GetExternalUserUnitLogic) builds(externalUserList map[string]*types.Ext
 		if externalUser.ExternalUserFollowAttribute.RemarkTag != nil {
 			ids.RemarkTag = append(ids.RemarkTag, externalUser.ExternalUserFollowAttribute.RemarkTag...)
 		}
-
-		if externalUser.ExternalUserFollowAttribute.Video != nil {
-			ids.Video = append(ids.RemarkTag, externalUser.ExternalUserFollowAttribute.Video...)
-		}
 	}
 
 	return
 }
 
-func (t *GetExternalUserUnitLogic) getUnit(ids unitIds, unitField string, externalUser map[string]*types.ExternalUser) {
+func (t *GetExternalUserUnitLogic) getUField(ids unitIds) (opt []string) {
+	if ids.RemarkTag != nil && len(ids.RemarkTag) > 0 {
+		opt = append(opt, `follow_user_tag`)
+	}
 
+	return
+}
+
+func (t *GetExternalUserUnitLogic) getUnit(ids unitIds, unitField string, externalUser map[string]*types.ExternalUser, userUnit *UserUnit) {
+	switch unitField {
+	case `follow_user_tag`:
+		if ids.RemarkTag == nil || len(ids.RemarkTag) == 0 {
+			return
+		}
+		tagList, err := NewGetExternalUserTagLogic(t.ctx, t.svcCtx).GetUserTagByTagIdList(ids.RemarkTag)
+		if err != nil {
+			t.Logger.Error(t.ctx, `GetUserTagByTagIdList_err`, err)
+		}
+
+		userUnit.Tag = tagList
+	}
+
+	return
 }

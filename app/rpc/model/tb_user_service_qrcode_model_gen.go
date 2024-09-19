@@ -25,6 +25,7 @@ type (
 	userServiceQrcodeModel interface {
 		Insert(ctx context.Context, data *UserServiceQrcode) (sql.Result, error)
 		FindOne(ctx context.Context, id uint64) (*UserServiceQrcode, error)
+		FindOneByConfigId(ctx context.Context, configId string) (*UserServiceQrcode, error)
 		Update(ctx context.Context, data *UserServiceQrcode) error
 		Delete(ctx context.Context, id uint64) error
 	}
@@ -41,7 +42,7 @@ type (
 		Scene         int64     `db:"scene"`           // 场景，1-在小程序中联系，2-通过二维码联系
 		Style         int64     `db:"style"`           // 小程序中联系按钮的样式，仅在scene为1时返回，详见附录
 		Remark        string    `db:"remark"`          // 联系方式的备注信息，用于助记
-		SkipVerify    bool      `db:"skip_verify"`     // 外部客户添加时是否无需验证
+		SkipVerify    int64     `db:"skip_verify"`     // 外部客户添加时是否无需验证 0-否 1-是
 		State         string    `db:"state"`           // 企业自定义的state参数，用于区分不同的添加渠道
 		QrCode        string    `db:"qr_code"`         // 联系二维码的URL，仅在scene为2时返回
 		User          string    `db:"user"`            // 使用该联系方式的用户userID列表
@@ -50,6 +51,7 @@ type (
 		ExpiresIn     int64     `db:"expires_in"`      // 临时会话二维码有效期，以秒为单位
 		ChatExpiresIn int64     `db:"chat_expires_in"` // 临时会话有效期，以秒为单位
 		Unionid       string    `db:"unionid"`         // 可进行临时会话的客户unionid
+		IsExclusive   int64     `db:"is_exclusive"`    // 0-否 1-是；是否开启同一外部企业客户只能添加同一个员工
 		Status        uint64    `db:"status"`          // 状态 (0:删除,1:正常) | 2020-09-10
 		CreatedAt     time.Time `db:"created_at"`      // 创建时间 | 2020-09-10
 		UpdatedAt     time.Time `db:"updated_at"`      // 更新时间 | 2020-09-10
@@ -59,7 +61,7 @@ type (
 func newUserServiceQrcodeModel(conn sqlx.SqlConn) *defaultUserServiceQrcodeModel {
 	return &defaultUserServiceQrcodeModel{
 		conn:  conn,
-		table: "`user_service_qrcode`",
+		table: "`tb_user_service_qrcode`",
 	}
 }
 
@@ -83,15 +85,29 @@ func (m *defaultUserServiceQrcodeModel) FindOne(ctx context.Context, id uint64) 
 	}
 }
 
+func (m *defaultUserServiceQrcodeModel) FindOneByConfigId(ctx context.Context, configId string) (*UserServiceQrcode, error) {
+	query := fmt.Sprintf("select %s from %s where `config_id` = ? limit 1", userServiceQrcodeRows, m.table)
+	var resp UserServiceQrcode
+	err := m.conn.QueryRowCtx(ctx, &resp, query, configId)
+	switch err {
+	case nil:
+		return &resp, nil
+	case sqlx.ErrNotFound:
+		return nil, ErrNotFound
+	default:
+		return nil, err
+	}
+}
+
 func (m *defaultUserServiceQrcodeModel) Insert(ctx context.Context, data *UserServiceQrcode) (sql.Result, error) {
-	query := fmt.Sprintf("insert into %s (%s) values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", m.table, userServiceQrcodeRowsExpectAutoSet)
-	ret, err := m.conn.ExecCtx(ctx, query, data.ConfigId, data.Type, data.Scene, data.Style, data.Remark, data.SkipVerify, data.State, data.QrCode, data.User, data.Party, data.IsTemp, data.ExpiresIn, data.ChatExpiresIn, data.Unionid, data.Status)
+	query := fmt.Sprintf("insert into %s (%s) values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", m.table, userServiceQrcodeRowsExpectAutoSet)
+	ret, err := m.conn.ExecCtx(ctx, query, data.ConfigId, data.Type, data.Scene, data.Style, data.Remark, data.SkipVerify, data.State, data.QrCode, data.User, data.Party, data.IsTemp, data.ExpiresIn, data.ChatExpiresIn, data.Unionid, data.IsExclusive, data.Status)
 	return ret, err
 }
 
 func (m *defaultUserServiceQrcodeModel) Update(ctx context.Context, data *UserServiceQrcode) error {
 	query := fmt.Sprintf("update %s set %s where `id` = ?", m.table, userServiceQrcodeRowsWithPlaceHolder)
-	_, err := m.conn.ExecCtx(ctx, query, data.ConfigId, data.Type, data.Scene, data.Style, data.Remark, data.SkipVerify, data.State, data.QrCode, data.User, data.Party, data.IsTemp, data.ExpiresIn, data.ChatExpiresIn, data.Unionid, data.Status, data.Id)
+	_, err := m.conn.ExecCtx(ctx, query, data.ConfigId, data.Type, data.Scene, data.Style, data.Remark, data.SkipVerify, data.State, data.QrCode, data.User, data.Party, data.IsTemp, data.ExpiresIn, data.ChatExpiresIn, data.Unionid, data.IsExclusive, data.Status, data.Id)
 	return err
 }
 
