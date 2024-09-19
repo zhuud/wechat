@@ -3,7 +3,7 @@ Clusters:
       Kafka:
         Name: go-stash
         Brokers:
-          - "127.0.0.1:9092"
+          - "kafka:9092"
         Topics:
           - wechat-log
         Group: pro

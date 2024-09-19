@@ -10,8 +10,16 @@
 # Unignore all dirs
 !*/
 deploy/elasticsearch/data
-deploy/log/api/*
-deploy/log/rpc/*
+deploy/filebeat/data
+deploy/go-stash/data
+deploy/grafana/data
+deploy/prometheus/data
+deploy/mysql/data
+deploy/mysql/log
+deploy/mysql/mysql-files
+deploy/redis/data
+deploy/redis/log
+deploy/log/
 
 # ignore
 **/.idea
