@@ -2,18 +2,38 @@ version: '3.8'
 
 services:
 
-  #查看es数据
-  kibana:
-    image: docker.elastic.co/kibana/kibana:8.15.0
-    container_name: kibana
+  # 监控收集数据
+  prometheus:
+    platform: linux/amd64
+    image: prom/prometheus
+    container_name: prometheus
     environment:
-      - elasticsearch.hosts=http://elasticsearch:9200
-      - TZ=Asia/Shanghai
+      TZ: Asia/Shanghai
+    volumes:
+      - ./deploy/prometheus/conf/prometheus.yml:/etc/prometheus/prometheus.yml
+      - ./deploy/prometheus/data:/prometheus
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--storage.tsdb.path=/prometheus"
     restart: always
     ports:
-      - "5601:5601"
-    depends_on:
-      - elasticsearch
+      - "9090:9090"
+    networks:
+      - wechat_net
+
+
+  # 监控数据看板
+  grafana:
+    platform: linux/amd64
+    image: grafana/grafana:11.1.0
+    container_name: grafana
+    environment:
+      TZ: Asia/Shanghai
+    volumes:
+      - ./deploy/grafana/data:/var/lib/grafana
+    restart: always
+    ports:
+      - "3000:3000"
     networks:
       - wechat_net
 
@@ -44,42 +64,6 @@ services:
 
 
 
-  # 监控收集数据
-  prometheus:
-    platform: linux/amd64
-    image: prom/prometheus
-    container_name: prometheus
-    environment:
-      TZ: Asia/Shanghai
-    volumes:
-      - ./deploy/prometheus/conf/prometheus.yml:/etc/prometheus/prometheus.yml
-      - ./deploy/prometheus/data:/prometheus
-    command:
-      - '--config.file=/etc/prometheus/prometheus.yml'
-      - '--storage.tsdb.path=/prometheus'
-    restart: always
-    ports:
-      - "9090:9090"
-    networks:
-      - wechat_net
-
-  # 监控数据展示
-  grafana:
-    platform: linux/amd64
-    image: grafana/grafana:11.1.0
-    container_name: grafana
-    environment:
-      TZ: Asia/Shanghai
-    volumes:
-      - ./deploy/grafana/data:/var/lib/grafana
-    restart: always
-    ports:
-      - "3000:3000"
-    networks:
-      - wechat_net
-
-
-
   # 日志收集
   filebeat:
     platform: linux/amd64
@@ -101,32 +85,10 @@ services:
       - wechat_net
 
 
-
-  # 消费kafka中filebeat收集的数据输出到es
-  go-stash:
-    # image: kevinwan/go-stash:1.0 # macOs intel or linux amd
-    image: kevinwan/go-stash:1.0-arm64 # macOs m1  or linux arm
-    container_name: go-stash
-    environment:
-      TZ: Asia/Shanghai
-    volumes:
-      - ./deploy/go-stash/conf:/app/etc
-    restart: always
-    depends_on:
-      - elasticsearch
-      - kafka
-    networks:
-      - wechat_net
-
-
-
   # 消息队列
   kafka:
     image: bitnami/kafka:3.5
     container_name: kafka
-    ports:
-      - "9092:9092"
-      - "9093:9093"
     environment:
       - KAFKA_ADVERTISED_HOST_NAME=kafka
       - KAFKA_AUTO_CREATE_TOPICS_ENABLE=true
@@ -145,12 +107,31 @@ services:
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
     restart: always
+    ports:
+      - "9092:9092"
+      - "9093:9093"
     networks:
       - wechat_net
 
 
+  # kafka获取 根据配置的规则处理 发送到es
+  go-stash:
+    # image: kevinwan/go-stash:1.0 # macOs intel or linux amd
+    image: kevinwan/go-stash:1.0-arm64 # macOs m1  or linux arm
+    container_name: go-stash
+    environment:
+      TZ: Asia/Shanghai
+    volumes:
+      - ./deploy/go-stash/conf:/app/etc
+    restart: always
+    depends_on:
+      - elasticsearch
+      - kafka
+    networks:
+      - wechat_net
 
-  # es kafka业务日志、jaeger链路数据
+
+  # es kafka业务日志 jaeger链路数据
   elasticsearch:
     platform: linux/amd64
     image: docker.elastic.co/elasticsearch/elasticsearch:8.15.0
@@ -171,6 +152,65 @@ services:
     networks:
       - wechat_net
 
+
+  # es数据看板
+  kibana:
+    image: docker.elastic.co/kibana/kibana:8.15.0
+    container_name: kibana
+    environment:
+      - elasticsearch.hosts=http://elasticsearch:9200
+      - TZ=Asia/Shanghai
+    restart: always
+    ports:
+      - "5601:5601"
+    depends_on:
+      - elasticsearch
+    networks:
+      - wechat_net
+
+
+
+# mysql
+  mysql:
+    image: mysql:8.0.30
+    container_name: mysql
+    environment:
+      - MYSQL_ROOT_PASSWORD=root
+      - TZ=Asia/Shanghai
+    volumes:
+      - ./deploy/mysql/data:/var/lib/mysql #数据文件挂载
+      - ./deploy/mysql/mysql-files:/var/lib/mysql-files #数据文件挂载
+      - ./deploy/mysql/conf:/etc/mysql #配置文件挂载
+      - ./deploy/mysql/log:/var/log #日志文件挂载
+    command:
+      - "--default-authentication-plugin=mysql_native_password"
+      - "--lower_case_table_names=1"
+      - "--character-set-server=utf8mb4"
+      - "--collation-server=utf8mb4_general_ci"
+    restart: always
+    ports:
+      - "3306:3306"
+    networks:
+      - wechat_net
+
+
+
+# redis
+  redis:
+    image: redis:latest
+    container_name: redis
+    environment:
+      - TZ=Asia/Shanghai
+    volumes:
+      - ./deploy/redis/data:/data
+      - ./deploy/redis/conf:/usr/local/etc/redis
+      - ./deploy/redis/log:/logs
+    command: redis-server /usr/local/etc/redis/redis.conf
+    restart: always
+    ports:
+      - '6379:6379'
+    networks:
+      - wechat_net
 
 
 networks:
