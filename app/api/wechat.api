@@ -70,6 +70,20 @@ type externalWayQrListRequest {
 	limit     int32
 }
 
+type externalContactWayRequest {
+	ConfigID      string   `form:"config_id"`
+	Remark        string   `form:"remark"`
+	SkipVerify    bool     `form:"skip_verify"`
+	Style         int      `form:"style"`
+	State         string   `form:"state"`
+	User          []string `form:"user"`
+	Party         []int    `form:"party"`
+	ExpiresIn     int      `form:"expires_in"`
+	ChatExpiresIn int      `form:"chat_expires_in"`
+	UnionID       string   `form:"unionid"`
+	Conclusions   string   `form:"conclusions"`
+}
+
 @server (
 	signature: true // 通过 signature 关键字开启签名功能
 	//jwt:        Auth // 对当前 Foo 语法块下的所有路由，开启 jwt 认证，不需要则请删除此行
@@ -87,5 +101,9 @@ service wechat-api {
 	@doc "企微联系人二维码列表"
 	@handler ExternalWayQrListHandler
 	post /list (externalWayQrListRequest) returns (response)
+
+	@doc "企微联系人二维码添加"
+	@handler ExternalWayQrAddHandler
+	post /add (externalContactWayRequest) returns (response)
 }
 
