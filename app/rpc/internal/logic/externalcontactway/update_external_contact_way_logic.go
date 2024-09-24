@@ -48,8 +48,8 @@ func (l *UpdateExternalContactWayLogic) UpdateExternalContactWay(in *wechat.Exte
 		UnionID:       in.Unionid,
 	}
 
-	conclusionType := ""
-	conclusionContent := ""
+	var conclusionTypeList []string
+	var conclusionContentList []string
 
 	if in.Conclusions != nil {
 		options.Conclusions = &request.Conclusions{
@@ -74,9 +74,9 @@ func (l *UpdateExternalContactWayLogic) UpdateExternalContactWay(in *wechat.Exte
 
 		if in.Conclusions.Text != nil {
 			options.Conclusions.Text = &msgTplgReq.TextOfMessage{Content: in.Conclusions.Text.Content}
-			conclusionType = "text"
+			conclusionTypeList = append(conclusionTypeList, "text")
 			jsonData, _ := json.Marshal(options.Conclusions.Text)
-			conclusionContent = cast.ToString(jsonData)
+			conclusionContentList = append(conclusionContentList, cast.ToString(jsonData))
 		}
 		if in.Conclusions.Link != nil {
 			options.Conclusions.Link = &msgTplgReq.Link{
@@ -85,18 +85,18 @@ func (l *UpdateExternalContactWayLogic) UpdateExternalContactWay(in *wechat.Exte
 				Desc:   in.Conclusions.Link.Desc,
 				URL:    in.Conclusions.Link.Url,
 			}
-			conclusionType = "link"
+			conclusionTypeList = append(conclusionTypeList, "link")
 			jsonData, _ := json.Marshal(options.Conclusions.Link)
-			conclusionContent = cast.ToString(jsonData)
+			conclusionContentList = append(conclusionContentList, cast.ToString(jsonData))
 		}
 		if in.Conclusions.Image != nil {
 			options.Conclusions.Image = &msgTplgReq.Image{
 				MediaID: in.Conclusions.Image.MediaId,
 				PicURL:  "",
 			}
-			conclusionType = "image"
+			conclusionTypeList = append(conclusionTypeList, "image")
 			jsonData, _ := json.Marshal(options.Conclusions.Image)
-			conclusionContent = cast.ToString(jsonData)
+			conclusionContentList = append(conclusionContentList, cast.ToString(jsonData))
 		}
 		if in.Conclusions.Miniprogram != nil {
 			options.Conclusions.MiniProgram = &msgTplgReq.MiniProgram{
@@ -105,9 +105,9 @@ func (l *UpdateExternalContactWayLogic) UpdateExternalContactWay(in *wechat.Exte
 				AppID:      in.Conclusions.Miniprogram.Appid,
 				Page:       in.Conclusions.Miniprogram.Page,
 			}
-			conclusionType = "miniprogram"
+			conclusionTypeList = append(conclusionTypeList, "miniprogram")
 			jsonData, _ := json.Marshal(options.Conclusions.MiniProgram)
-			conclusionContent = cast.ToString(jsonData)
+			conclusionContentList = append(conclusionContentList, cast.ToString(jsonData))
 		}
 	}
 
@@ -152,23 +152,24 @@ func (l *UpdateExternalContactWayLogic) UpdateExternalContactWay(in *wechat.Exte
 		updateErr := l.svcCtx.ModelUserServiceQrcodeModel.Update(l.ctx, updateUserServiceQrcode)
 		if updateErr != nil {
 			l.Logger.Error("ModelUserServiceQrcodeModel_Update_Err", updateErr)
-			return nil, updateErr
 		}
 
 		//结束语
 		l.svcCtx.ModelUserServiceQrcodeConclusion.Delete(l.ctx, qrcodeInfo.Id)
 
-		userServiceQrcodeConclusion := &model.TbUserServiceQrcodeConclusions{
-			UserServiceQcCodeId: cast.ToInt64(qrcodeInfo.Id),
-			Type:                conclusionType,
-			Content:             conclusionContent,
-			Status:              1,
-		}
-
-		_, conclusionInsertErr := l.svcCtx.ModelUserServiceQrcodeConclusion.Insert(l.ctx, userServiceQrcodeConclusion)
-		if conclusionInsertErr != nil {
-			l.Logger.Error("ModelUserServiceQrcodeConclusion_Insert_Err", conclusionInsertErr)
-			return nil, conclusionInsertErr
+		if len(conclusionTypeList) > 0 {
+			for k, v := range conclusionTypeList {
+				userServiceQrcodeConclusion := &model.TbUserServiceQrcodeConclusions{
+					UserServiceQcCodeId: cast.ToInt64(qrcodeInfo.Id),
+					Type:                v,
+					Content:             conclusionContentList[k],
+					Status:              1,
+				}
+				_, conclusionInsertErr := l.svcCtx.ModelUserServiceQrcodeConclusion.Insert(l.ctx, userServiceQrcodeConclusion)
+				if conclusionInsertErr != nil {
+					l.Logger.Error("ModelUserServiceQrcodeConclusion_Insert_Err", conclusionInsertErr)
+				}
+			}
 		}
 	}
 
