@@ -45,7 +45,7 @@ func (l *DeleteExternalContactWayLogic) DeleteExternalContactWay(in *wechat.Exte
 		return nil, findErr
 	}
 
-	if qrcodeInfo == nil {
+	if qrcodeInfo != nil {
 		qrcodeDelErr := l.svcCtx.ModelUserServiceQrcodeModel.Delete(l.ctx, qrcodeInfo.Id)
 		if qrcodeDelErr != nil {
 			l.Logger.Error("ModelUserServiceQrcodeModel_Update_Err", qrcodeDelErr)

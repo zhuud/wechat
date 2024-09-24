@@ -130,7 +130,7 @@ func (l *UpdateExternalContactWayLogic) UpdateExternalContactWay(in *wechat.Exte
 		return nil, findErr
 	}
 
-	if qrcodeInfo == nil {
+	if qrcodeInfo != nil {
 		updateUserServiceQrcode := &model.UserServiceQrcode{
 			ConfigId:      in.ConfigId,
 			Type:          qrcodeInfo.Type,
