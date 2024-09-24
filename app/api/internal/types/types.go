@@ -12,18 +12,28 @@ type CallbackReq struct {
 	Data       interface{} `json:"Data"`
 }
 
+type ExternalContactWayDelRequest struct {
+	ConfigID string `json:"config_id"`
+}
+
 type ExternalContactWayRequest struct {
-	ConfigID      string   `form:"config_id"`
-	Remark        string   `form:"remark"`
-	SkipVerify    bool     `form:"skip_verify"`
-	Style         int      `form:"style"`
-	State         string   `form:"state"`
-	User          []string `form:"user"`
-	Party         []int    `form:"party"`
-	ExpiresIn     int      `form:"expires_in"`
-	ChatExpiresIn int      `form:"chat_expires_in"`
-	UnionID       string   `form:"unionid"`
-	Conclusions   string   `form:"conclusions"`
+	ConfigID               string   `json:"config_id"`
+	Type                   int32    `json:"type"`                     // :1,
+	Scene                  int32    `json:"scene"`                    // 1,
+	Style                  int32    `json:"style"`                    // 1,
+	Remark                 string   `json:"remark"`                   // "渠道客户",
+	SkipVerify             bool     `json:"skip_verify"`              // true,
+	State                  string   `json:"state"`                    // "teststate",
+	User                   []string `json:"user"`                     // : ["zhangsan", "lisi", "wangwu"],
+	Party                  []int32  `json:"party"`                    // : [2, 3],
+	IsTemp                 bool     `json:"is_temp"`                  // true,
+	ExpiresIn              int32    `json:"expires_in"`               // 86400,
+	ChatExpiresIn          int32    `json:"chat_expires_in"`          // 86400,
+	UnionID                string   `json:"unionid"`                  // "oxTWIuGaIt6gTKsQRLau2M0AAAA",
+	ConclusionsText        string   `json:"conclusions_text"`         //{content:""}
+	ConclusionsImage       string   `json:"conclusions_image"`        //{media_id: "", pic_url: ""}
+	ConclusionsLink        string   `json:"conclusions_link"`         //{title:"", picurl:"", desc:"", url:""}
+	ConclusionsMiniProgram string   `json:"conclusions_mini_program"` //{title:"", pic_media_id:"", appid:"", page:""}
 }
 
 type ExternalUserRequest struct {

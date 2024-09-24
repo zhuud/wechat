@@ -59,6 +59,18 @@ func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
 				Handler: externalwayqr.ExternalWayQrAddHandler(serverCtx),
 			},
 			{
+				// 企微联系人二维码删除
+				Method:  http.MethodPost,
+				Path:    "/delete",
+				Handler: externalwayqr.ExternalWayQrDeleteHandler(serverCtx),
+			},
+			{
+				// 企微联系人二维码更新
+				Method:  http.MethodPost,
+				Path:    "/edit",
+				Handler: externalwayqr.ExternalWayQrEditHandler(serverCtx),
+			},
+			{
 				// 企微联系人二维码详情
 				Method:  http.MethodPost,
 				Path:    "/info",

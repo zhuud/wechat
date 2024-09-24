@@ -11,27 +11,26 @@ import (
 	"github.com/zeromicro/go-zero/core/logx"
 )
 
-type ExternalWayQrAddLogic struct {
+type ExternalWayQrEditLogic struct {
 	logx.Logger
 	ctx    context.Context
 	svcCtx *svc.ServiceContext
 }
 
-// 企微联系人二维码添加
-func NewExternalWayQrAddLogic(ctx context.Context, svcCtx *svc.ServiceContext) *ExternalWayQrAddLogic {
-	return &ExternalWayQrAddLogic{
+// 企微联系人二维码更新
+func NewExternalWayQrEditLogic(ctx context.Context, svcCtx *svc.ServiceContext) *ExternalWayQrEditLogic {
+	return &ExternalWayQrEditLogic{
 		Logger: logx.WithContext(ctx),
 		ctx:    ctx,
 		svcCtx: svcCtx,
 	}
 }
 
-func (l *ExternalWayQrAddLogic) ExternalWayQrAdd(req *types.ExternalContactWayRequest) (resp *types.Response, err error) {
+func (l *ExternalWayQrEditLogic) ExternalWayQrEdit(req *types.ExternalContactWayRequest) (resp *types.Response, err error) {
 	// todo: add your logic here and delete this line
 
-	data, err := l.svcCtx.ExternalcontactwayRpc.CreateExternalContactWay(l.ctx, &externalcontactway.ExternalContactWayData{
-		Type:          req.Type,
-		Scene:         req.Scene,
+	data, err := l.svcCtx.ExternalcontactwayRpc.UpdateExternalContactWay(l.ctx, &externalcontactway.ExternalContactWayData{
+		ConfigId:      req.ConfigID,
 		Style:         req.Style,
 		Remark:        req.Remark,
 		SkipVerify:    req.SkipVerify,
