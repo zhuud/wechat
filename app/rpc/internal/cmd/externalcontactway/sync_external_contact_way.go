@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"time"
 
-	"rpc/internal/config"
 	"rpc/internal/svc"
 	"rpc/model"
 
