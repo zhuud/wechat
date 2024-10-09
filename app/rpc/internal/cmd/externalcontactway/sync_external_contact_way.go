@@ -12,6 +12,7 @@ import (
 	contactWayResponse "github.com/ArtisanCloud/PowerWeChat/v3/src/work/externalContact/contactWay/response"
 	"github.com/spf13/cobra"
 	"github.com/zeromicro/go-zero/core/logx"
+	"golang.org/x/time/rate"
 )
 
 func NewSyncExternalContactWayCmd(svcCtx *svc.ServiceContext) func(cmd *cobra.Command, args []string) error {
@@ -39,9 +40,16 @@ func (s *syncExternalContactWayCmd) Do(args []string) error {
 	params := &contactWayRequest.RequestListContactWay{}
 	params.Limit = 100
 
-	var err error
+	limiter := rate.NewLimiter(10, 10)
+
+	return s.ContactWayTask(params, limiter)
+}
+
+func (s *syncExternalContactWayCmd) ContactWayTask(params *contactWayRequest.RequestListContactWay, limiter *rate.Limiter) (err error) {
+
 	list := &contactWayResponse.ResponseListContactWay{}
 
+	limiter.Wait(s.ctx)
 	list, err = s.svcCtx.WeCom.WithCorp("yx").ContactWay.List(context.Background(), params)
 	if err != nil {
 		s.Error(err)
@@ -51,6 +59,8 @@ func (s *syncExternalContactWayCmd) Do(args []string) error {
 		for _, item := range list.ContactWayIDs {
 
 			configId := item.ConfigID
+
+			limiter.Wait(s.ctx)
 			configData, err := s.svcCtx.WeCom.WithCorp("yx").ContactWay.Get(context.Background(), configId)
 			if err != nil || configData.ContactWay == nil {
 				s.Error(err)
@@ -91,6 +101,7 @@ func (s *syncExternalContactWayCmd) Do(args []string) error {
 				UpdatedAt:     time.Now(),
 			}
 
+			limiter.Wait(s.ctx)
 			findData, err := s.svcCtx.ModelUserServiceQrcodeModel.FindOneByConfigId(s.ctx, configId)
 			if err != nil {
 				s.Error(err)
