@@ -30,6 +30,7 @@ type ServiceContext struct {
 	ModelUserServiceQrcodeModel      model.UserServiceQrcodeModel
 	ModelUserServiceQrcodeConclusion model.TbUserServiceQrcodeConclusionsModel
 	ModelExternalUserTag             model.TbExternalUserTagModel
+	ModelExternalUserAttribute       model.TbExternalUserAttributeModel
 }
 
 var (

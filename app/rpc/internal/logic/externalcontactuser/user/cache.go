@@ -128,7 +128,7 @@ func (t *GetExternalUserCacheLogic) getUserListByDB(ctx context.Context, req *we
 
 		if externalUserFollowAttrList, ok := ub.ExternalUserFollowAttribute[externalUserId]; ok {
 			user[externalUserId].ExternalUserFollowAttributeDB = externalUserFollowAttrList
-			user[externalUserId].ExternalUserFollowAttribute = NewGetExternalUserAttributeLogic(t.ctx, t.svcCtx).HandleAttributeFormat(externalUserFollowAttrList)
+			user[externalUserId].ExternalUserFollowAttribute = NewGetExternalUserFollowAttributeLogic(t.ctx, t.svcCtx).HandleAttributeFormat(externalUserFollowAttrList)
 		}
 
 	}
@@ -161,25 +161,33 @@ func (t *GetExternalUserCacheLogic) getUnit(ctx context.Context, externalUserIdL
 		// 查询用户-基础数据
 		userIdToBaseInfo, err := NewGetExternalUserBaseLogic(t.ctx, t.svcCtx).GetUserListByExternalUserIdList(externalUserIdList)
 		if err != nil {
-			logc.Error(ctx, `cache-获取用户属性信息失败, GetUserListByExternalUserIdList_err`, err, externalUserIdList)
+			logc.Error(ctx, `db-获取用户属性信息失败, GetUserListByExternalUserIdList_err`, err, externalUserIdList)
 			return
 		}
 		ub.ExternalUser = userIdToBaseInfo
+
+	case `attribute`:
+		// 查询用户-扩展信息
+		userIdToAttribute, err := NewGetExternalUserAttributeLogic(t.ctx, t.svcCtx).GetUserAttributeByExternalUserIdList(externalUserIdList)
+		if err != nil {
+			logc.Error(ctx, `db-获取用户扩展属性信息失败, GetUserAttributeByExternalUserIdList_err`, err, externalUserIdList)
+		}
+		ub.ExternalUserAttribute = userIdToAttribute
 
 	case `follow`:
 		// 查询用户-外部联系人属性表
 		userIdToFollow, err := NewGetExternalUserFollowLogic(t.ctx, t.svcCtx).GetUserFollowListByExternalUserIdList(externalUserIdList)
 		if err != nil {
-			logc.Error(ctx, `cache-获取用户属性信息失败, GetUserFollowListByExternalUserIdList_err`, err, externalUserIdList)
+			logc.Error(ctx, `db-获取用户属性信息失败, GetUserFollowListByExternalUserIdList_err`, err, externalUserIdList)
 			return
 		}
 		ub.ExternalUserFollow = userIdToFollow
 
 	case `follow_attribute`:
 		// 查询用户-外部联系人添加员工信息属性表
-		userIdToAttributeList, err := NewGetExternalUserAttributeLogic(t.ctx, t.svcCtx).GetUserFollowAttributeByExternalUserIdList(externalUserIdList)
+		userIdToAttributeList, err := NewGetExternalUserFollowAttributeLogic(t.ctx, t.svcCtx).GetUserFollowAttributeByExternalUserIdList(externalUserIdList)
 		if err != nil {
-			logc.Error(ctx, `cache-获取用户属性信息失败, GetUserFollowAttributeByExternalUserIdList_err`, err, externalUserIdList)
+			logc.Error(ctx, `db-获取用户属性信息失败, GetUserFollowAttributeByExternalUserIdList_err`, err, externalUserIdList)
 			return
 		}
 		ub.ExternalUserFollowAttribute = userIdToAttributeList

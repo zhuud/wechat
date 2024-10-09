@@ -3,7 +3,7 @@ syntax = "proto3";
 package wechat;
 option go_package="./wechat";
 
-import "google/protobuf/any.proto";
+//import "google/protobuf/any.proto";
 
 // 错误信息定义
 message Error {
@@ -54,15 +54,28 @@ message ExternalUser {
   ExternalUserProfile external_profile = 10;
 }
 message ExternalUserProfile {
-  repeated ExternalUserProfileItem external_attr = 1;
+  string external_corp_name = 1;
+  ExternalUserFollowUserWechatChannel wechat_channels = 3;
+  repeated ExternalUserProfileItem external_attr = 2;
 }
 message ExternalUserProfileItem {
   int32 type = 1;
   string name = 2;
   ExternalUserProfileItemText text = 3;
+  ExternalUserProfileItemWeb web = 4;
+  ExternalUserProfileItemMiniprogram miniprogram = 5;
 }
 message ExternalUserProfileItemText {
   string value = 1;
+}
+message ExternalUserProfileItemWeb {
+  string url = 1;
+  string title = 2;
+}
+message ExternalUserProfileItemMiniprogram {
+  string appid = 1;
+  string pagepath = 2;
+  string title = 3;
 }
 message ExternalUserFollowUser {
   string userid = 1;
@@ -85,6 +98,7 @@ message ExternalUserFollowUserTag {
 message ExternalUserFollowUserWechatChannel {
   string nickname = 1;
   int32 source = 2;
+  int32 status = 3;
 }
 message ExternalUserIdReq {
   repeated string userid_list = 1;
