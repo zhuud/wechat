@@ -16,6 +16,7 @@ import (
 
 type ServiceContext struct {
 	Config     config.Config
+	Alarm      *Alarm
 	FastHttp   *fasthttp.Client  // fast http
 	Redis      *redis.Redis      // redis
 	LocalCache *collection.Cache // local cache
@@ -53,6 +54,7 @@ func NewServiceContext(c config.Config) *ServiceContext {
 			Config: c,
 
 			// infra
+			Alarm:      &Alarm{},
 			FastHttp:   fasthttp.NewFastHttp(c.FastHttp),
 			Redis:      redisConn,
 			LocalCache: localCache,
