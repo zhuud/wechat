@@ -13,6 +13,18 @@ CREATE TABLE `tb_external_user` (
   `updated_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间 | 2020-09-10',
   PRIMARY KEY (`external_userid`),
   KEY `idx_unionid` (`unionid`)
+) ENGINE = InnoDB COMMENT = '外部联系人信息表 | 2020-09-10';
+CREATE TABLE `tb_external_user_attribute` (
+  `seq` int(11) unsigned NOT NULL AUTO_INCREMENT COMMENT '主键 | 2020-09-10',
+  `external_userid` varchar(50) NOT NULL DEFAULT '' COMMENT '外部联系人的userid | 2020-09-10',
+  `attribute_type` tinyint(3) unsigned NOT NULL DEFAULT '0' COMMENT '类型 0:文本 1:网页 / 2:小程序 | 2020-09-10',
+  `attribute_value` int(11) unsigned NOT NULL DEFAULT '0' COMMENT '类型值 | 2020-09-10',
+  `extension` varchar(500) NOT NULL DEFAULT '' COMMENT '扩展信息 | 2020-09-10',
+  `status` tinyint(3) unsigned NOT NULL DEFAULT '1' COMMENT '状态 (0:删除,1:正常) | 2020-09-10',
+  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间 | 2020-09-10',
+  `updated_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间 | 2020-09-10',
+  PRIMARY KEY (`seq`),
+  KEY `idx_external_userid` (`external_userid`)
 ) ENGINE = InnoDB COMMENT = '外部联系人属性表(attribute_type为业务枚举) | 2020-09-10';
 CREATE TABLE `tb_external_user_follow` (
   `seq` int(11) unsigned NOT NULL AUTO_INCREMENT COMMENT '主键 | 2020-09-10',

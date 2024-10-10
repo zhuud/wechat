@@ -70,6 +70,30 @@ type externalWayQrListRequest {
 	limit     int32
 }
 
+type externalContactWayRequest {
+	ConfigID               string   `json:"config_id"`
+	Type                   int32    `json:"type"` // :1,
+	Scene                  int32    `json:"scene"` // 1,
+	Style                  int32    `json:"style"` // 1,
+	Remark                 string   `json:"remark"` // "渠道客户",
+	SkipVerify             bool     `json:"skip_verify"` // true,
+	State                  string   `json:"state"` // "teststate",
+	User                   []string `json:"user"` // : ["zhangsan", "lisi", "wangwu"],
+	Party                  []int32  `json:"party"` // : [2, 3],
+	IsTemp                 bool     `json:"is_temp"` // true,
+	ExpiresIn              int32    `json:"expires_in"` // 86400,
+	ChatExpiresIn          int32    `json:"chat_expires_in"` // 86400,
+	UnionID                string   `json:"unionid"` // "oxTWIuGaIt6gTKsQRLau2M0AAAA",
+	ConclusionsText        string   `json:"conclusions_text"` //{content:""}
+	ConclusionsImage       string   `json:"conclusions_image"` //{media_id: "", pic_url: ""}
+	ConclusionsLink        string   `json:"conclusions_link"` //{title:"", picurl:"", desc:"", url:""}
+	ConclusionsMiniProgram string   `json:"conclusions_mini_program"` //{title:"", pic_media_id:"", appid:"", page:""}
+}
+
+type externalContactWayDelRequest {
+	ConfigID string `json:"config_id"`
+}
+
 @server (
 	signature: true // 通过 signature 关键字开启签名功能
 	//jwt:        Auth // 对当前 Foo 语法块下的所有路由，开启 jwt 认证，不需要则请删除此行
@@ -87,5 +111,17 @@ service wechat-api {
 	@doc "企微联系人二维码列表"
 	@handler ExternalWayQrListHandler
 	post /list (externalWayQrListRequest) returns (response)
+
+	@doc "企微联系人二维码添加"
+	@handler ExternalWayQrAddHandler
+	post /add (externalContactWayRequest) returns (response)
+
+	@doc "企微联系人二维码更新"
+	@handler ExternalWayQrEditHandler
+	post /edit (externalContactWayRequest) returns (response)
+
+	@doc "企微联系人二维码删除"
+	@handler ExternalWayQrDeleteHandler
+	post /delete (externalContactWayDelRequest) returns (response)
 }
 

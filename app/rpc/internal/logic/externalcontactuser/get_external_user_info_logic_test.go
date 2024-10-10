@@ -33,7 +33,8 @@ func Test_GetExternalUserInfo(t *testing.T) {
 			name: "",
 			args: args{
 				param: &wechat.ExternalUserInfoReq{
-					UnionidList: []string{"wmYYltDAAAlg093GN65jtwLAn1VqOi5g"},
+					UnionidList:        []string{"wmYYltDAAAlg093GN65jtwLAn1VqOi5g"},
+					ExternalUseridList: []string{`wmYYltDAAAlg093GN65jtwLAn1VqOi5g`},
 				},
 			},
 			want:    &wechat.ExternalUserInfoResp{},

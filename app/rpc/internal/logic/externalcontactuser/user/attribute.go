@@ -3,10 +3,10 @@ package user
 import (
 	"context"
 	"encoding/json"
+	"github.com/spf13/cast"
 	"github.com/zeromicro/go-zero/core/logc"
 	"github.com/zeromicro/go-zero/core/logx"
 	"rpc/internal/svc"
-	"rpc/internal/types"
 	"rpc/model"
 	"rpc/wechat"
 )
@@ -26,35 +26,58 @@ func NewGetExternalUserAttributeLogic(ctx context.Context, svcCtx *svc.ServiceCo
 }
 
 /**
- * 获取用户基础信息
+ * 获取用户扩展信息
  */
-func (t *GetExternalUserAttributeLogic) GetUserFollowAttributeByExternalUserIdList(externalUserIdList []string) (externalUserMap map[string]map[string]*model.TbExternalUserFollowAttribute, err error) {
-	externalUserAttributeList, err := t.svcCtx.ModelExternalUserFollowAttribute.FindListByExternalUserid(t.ctx, externalUserIdList)
+func (t *GetExternalUserAttributeLogic) GetUserAttributeByExternalUserIdList(externalUserIdList []string) (externalUserMap map[string][]*model.TbExternalUserAttribute, err error) {
+	externalUserAttributeList, err := t.svcCtx.ModelExternalUserAttribute.FindListByExternalUserid(t.ctx, externalUserIdList)
 	if err != nil {
 		logc.Error(t.ctx, `GetUserFollowAttributeByExternalUserIdList_err`, err)
 		return nil, err
 	}
 
 	for _, externalUserAttribute := range externalUserAttributeList {
-		externalUserMap[externalUserAttribute.ExternalUserid][externalUserAttribute.Userid] = externalUserAttribute
+		if externalUserMap[externalUserAttribute.ExternalUserid] == nil {
+			externalUserMap[externalUserAttribute.ExternalUserid] = []*model.TbExternalUserAttribute{}
+		}
+		externalUserMap[externalUserAttribute.ExternalUserid] = append(externalUserMap[externalUserAttribute.ExternalUserid], externalUserAttribute)
 	}
 
 	return
 }
 
-func (t *GetExternalUserAttributeLogic) HandleAttributeFormat(externalUserFollowAttrList map[string]*model.TbExternalUserFollowAttribute) (externalUserAttribute *types.ExternalUserAttribute) {
-	for _, externalUserFollowAttr := range externalUserFollowAttrList {
-		//标签信息
-		if externalUserFollowAttr.AttributeType == model.AttributeTypeRemarkTag {
-			externalUserAttribute.RemarkTag = append(externalUserAttribute.RemarkTag, externalUserFollowAttr.AttributeValue)
+func (t *GetExternalUserAttributeLogic) HandleUserExternalProfileAttribute(externalUserAttributeList map[string][]*model.TbExternalUserAttribute) (externalProfileMap map[string]wechat.ExternalUserProfile) {
+	if externalUserAttributeList == nil || len(externalUserAttributeList) == 0 {
+		return
+	}
+
+	for externalUserId, externalUserAttribute := range externalUserAttributeList {
+		if externalUserAttribute == nil {
+			continue
 		}
 
-		//视频信息
-		if externalUserFollowAttr.AttributeType == model.AttributeTypeVideo {
-			video := &wechat.ExternalUserFollowUserWechatChannel{}
-			json.Unmarshal([]byte(externalUserFollowAttr.Extension), &video)
-			externalUserAttribute.Video[externalUserFollowAttr.Userid] = video
+		externalUserProfile := wechat.ExternalUserProfile{}
+		externalAttr := []wechat.ExternalUserProfileItem{}
+		for _, externalUserAttributeInfo := range externalUserAttribute {
+			//文本
+			if externalUserAttributeInfo.AttributeType == model.AttributeTypeText {
+				text := wechat.ExternalUserProfileItemText{}
+				json.Unmarshal([]byte(externalUserAttributeInfo.Extension), &text)
+				externalAttr = append(externalAttr, wechat.ExternalUserProfileItem{
+					Type: cast.ToInt32(externalUserAttributeInfo.AttributeType),
+					Name: externalUserAttributeInfo.AttributeValue,
+					Text: &text,
+				})
+
+				//网页
+			} else if externalUserAttributeInfo.AttributeType == model.AttributeTypeWeb {
+				//小程序
+			} else if externalUserAttributeInfo.AttributeType == model.AttributeTypeMiniprogram {
+
+			} else if externalUserAttributeInfo.AttributeType == model.AttributeTypeprofile {
+			}
 		}
+
+		externalProfileMap[externalUserId] = externalUserProfile
 	}
 
 	return
