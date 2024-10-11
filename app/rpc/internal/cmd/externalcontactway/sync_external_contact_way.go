@@ -3,6 +3,7 @@ package externalcontactway
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"time"
 
 	"rpc/internal/svc"
@@ -12,6 +13,7 @@ import (
 	contactWayResponse "github.com/ArtisanCloud/PowerWeChat/v3/src/work/externalContact/contactWay/response"
 	"github.com/avast/retry-go"
 	"github.com/spf13/cobra"
+	"github.com/zeromicro/go-zero/core/fx"
 	"github.com/zeromicro/go-zero/core/logx"
 	"golang.org/x/time/rate"
 )
@@ -38,20 +40,58 @@ func newSyncExternalContactWayCmd(ctx context.Context, svcCtx *svc.ServiceContex
 
 func (s *syncExternalContactWayCmd) Do(args []string) error {
 
-	params := &contactWayRequest.RequestListContactWay{}
-	params.Limit = 100
-
-	/**
 	ctx := context.Background()
-	var err error
-	getListFunc := func(source chan<- any) {
-		err = s.getContactWayList(ctx, params, source)
+
+	getContactWayListFunc := func(source chan<- any) {
+
+		_ = retry.Do(func() error {
+			var err error
+			params := &contactWayRequest.RequestListContactWay{
+				Limit: 100,
+			}
+			list := &contactWayResponse.ResponseListContactWay{}
+			list, err = s.svcCtx.WeCom.WithCorp("yx").ContactWay.List(ctx, params)
+			if err != nil {
+				s.Error(err)
+				return err
+			}
+			for len(list.ContactWayIDs) > 0 {
+				for _, item := range list.ContactWayIDs {
+					source <- item.ConfigID
+				}
+
+				params.Limit = 100
+				params.Cursor = list.NextCursor
+				list, err = s.svcCtx.WeCom.WithCorp("yx").ContactWay.List(ctx, params)
+				if err != nil {
+					s.Error(err)
+				}
+			}
+			return nil
+		})
 	}
 
-	limiter := rate.NewLimiter(10, 10)
+	getContactWayInfoFunc := func(item any) any {
+		configId, _ := item.(string)
 
-	return s.ContactWayTask(params, limiter)
-	**/
+		contactWayInof, err := s.getContactWayInfo(ctx, configId)
+		if err != nil {
+			s.svcCtx.Alarm.SendLarkCtx(s.ctx, fmt.Sprintf("getContactWayInfo err: \n %v", err))
+		}
+		return contactWayInof
+	}
+
+	saveContactWayInfo := func(item any) {
+		contactWayInfo, _ := item.(*contactWayResponse.ResponseGetContactWay)
+		err := s.saveContactWayInfo(ctx, contactWayInfo)
+		if err != nil {
+			s.svcCtx.Alarm.SendLarkCtx(s.ctx, fmt.Sprintf("saveContactWayInfo err: \n %v", err))
+		}
+	}
+
+	// 主程序执行
+	fx.From(getContactWayListFunc).Map(getContactWayInfoFunc).Parallel(saveContactWayInfo, fx.WithWorkers(64))
+
 	return nil
 }
 
