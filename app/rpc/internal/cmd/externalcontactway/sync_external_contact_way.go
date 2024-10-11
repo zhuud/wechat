@@ -74,11 +74,11 @@ func (s *syncExternalContactWayCmd) Do(args []string) error {
 	getContactWayInfoFunc := func(item any) any {
 		configId, _ := item.(string)
 
-		contactWayInof, err := s.getContactWayInfo(ctx, configId)
+		contactWayInfo, err := s.getContactWayInfo(ctx, configId)
 		if err != nil {
 			s.svcCtx.Alarm.SendLarkCtx(s.ctx, fmt.Sprintf("getContactWayInfo err: \n %v", err))
 		}
-		return contactWayInof
+		return contactWayInfo
 	}
 
 	saveContactWayInfo := func(item any) {
