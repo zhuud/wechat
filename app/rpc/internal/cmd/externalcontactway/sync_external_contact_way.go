@@ -49,6 +49,13 @@ func (s *syncExternalContactWayCmd) Do(args []string) error {
 			params := &contactWayRequest.RequestListContactWay{
 				Limit: 100,
 			}
+
+			//频率控制添加
+			dur, lerr := s.svcCtx.WechatLimit.WaitAllow("external_contact_way", time.Hour*2)
+			if lerr != nil {
+				s.svcCtx.Alarm.SendLarkCtx(s.ctx, fmt.Sprintf("syncExternalUserCmd.batchGetExternal.WaitAllow dui:%d error: %v 需要重新处理后续数据", dur, lerr))
+			}
+
 			list := &contactWayResponse.ResponseListContactWay{}
 			list, err = s.svcCtx.WeCom.WithCorp("yx").ContactWay.List(ctx, params)
 			if err != nil {
@@ -73,6 +80,12 @@ func (s *syncExternalContactWayCmd) Do(args []string) error {
 
 	getContactWayInfoFunc := func(item any) any {
 		configId, _ := item.(string)
+
+		//频率控制添加
+		dur, lerr := s.svcCtx.WechatLimit.WaitAllow("external_contact_way", time.Hour*2)
+		if lerr != nil {
+			s.svcCtx.Alarm.SendLarkCtx(s.ctx, fmt.Sprintf("syncExternalUserCmd.batchGetExternal.WaitAllow dui:%d error: %v 需要重新处理后续数据", dur, lerr))
+		}
 
 		contactWayInfo, err := s.getContactWayInfo(ctx, configId)
 		if err != nil {
