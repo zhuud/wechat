@@ -67,6 +67,7 @@ func (s *syncExternalContactWayCmd) Do(args []string) error {
 					source <- item.ConfigID
 				}
 
+				time.Sleep(1 * time.Second)
 				params.Limit = 100
 				params.Cursor = list.NextCursor
 				list, err = s.svcCtx.WeCom.WithCorp("yx").ContactWay.List(ctx, params)
