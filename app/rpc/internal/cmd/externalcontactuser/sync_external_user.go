@@ -4,13 +4,13 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"rpc/internal/logic/externalcontactuser/save"
 	"time"
 
 	"rpc/internal/svc"
 
 	"github.com/ArtisanCloud/PowerWeChat/v3/src/work/externalContact/response"
 	"github.com/avast/retry-go"
-	"github.com/davecgh/go-spew/spew"
 	"github.com/spf13/cobra"
 	"github.com/zeromicro/go-zero/core/fx"
 	"github.com/zeromicro/go-zero/core/logx"
@@ -43,11 +43,13 @@ func (s *syncExternalUserCmd) Do(args []string) error {
 	if len(args) > 0 {
 		crop = args[0]
 	}
+	saveLogic := save.NewSaveExternalUserLogic(s.ctx, s.svcCtx)
 
 	// 获取配置了客户联系功能的成员列表
 	generateFunc := func(source chan<- any) {
 		userIdList, err := s.getFollowUserList()
-		s.Infof("syncExternalUserCmd.getFollowUserList.userIdList: %v", userIdList)
+		// TODO 上线打印
+		// s.Infof("syncExternalUserCmd.getFollowUserList.userIdList: %v", userIdList)
 		if err != nil {
 			s.svcCtx.Alarm.SendLarkCtx(s.ctx, fmt.Sprintf("syncExternalUserCmd.GetFollowUsers error: %v", err))
 		}
@@ -81,7 +83,7 @@ func (s *syncExternalUserCmd) Do(args []string) error {
 
 		for _, externalUser := range externalUserList {
 			s.Infof("syncExternalUserCmd.saveExternalUser info: %s", externalUser.ExternalContact.ExternalUserID)
-			if err := s.saveExternalUser(externalUser); err != nil {
+			if err := saveLogic.Save(crop, externalUser); err != nil {
 				s.svcCtx.Alarm.SendLarkCtx(s.ctx, fmt.Sprintf("syncExternalUserCmd.saveExternalUser error: %v", err))
 			}
 		}
@@ -95,19 +97,16 @@ func (s *syncExternalUserCmd) Do(args []string) error {
 	return nil
 }
 
-func (s *syncExternalUserCmd) saveExternalUser(externalUser *response.ResponseExternalContact) error {
-	spew.Dump(externalUser)
-	return nil
-}
-
 func (s *syncExternalUserCmd) batchGetExternal(crop string, userIdList []string) ([]*response.ResponseExternalContact, error) {
 	var (
 		err              []error
 		externalUserList []*response.ResponseExternalContact
 		cursor           = ""
-		limit            = 1 // TODO 100
-		maxSize          = 10000
-		size             = 0
+		// TODO 测试
+		limit = 1
+		// limit            = 100
+		maxSize = 20000
+		size    = 0
 	)
 
 	for {
@@ -121,7 +120,7 @@ func (s *syncExternalUserCmd) batchGetExternal(crop string, userIdList []string)
 		// 频控限制
 		dur, lerr := s.svcCtx.WechatLimit.WaitAllow("external_user", time.Hour*2)
 		if lerr != nil {
-			s.svcCtx.Alarm.SendLarkCtx(s.ctx, fmt.Sprintf("syncExternalUserCmd.batchGetExternal.WaitAllow userIdList: %v, cursor:%s, dur:%d, error: %v 需要重新处理后续数据", userIdList, cursor, dur, lerr))
+			s.svcCtx.Alarm.SendLarkCtx(s.ctx, fmt.Sprintf("syncExternalUserCmd.batchGetExternal.WaitAllow userIdList: %v, cursor:%s, dur:%d, error: %v 微信频控限制需要重新处理后续数据", userIdList, cursor, dur, lerr))
 			break
 		}
 

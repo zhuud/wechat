@@ -21,6 +21,7 @@ type (
 	TbExternalUserFollowAttributeModel interface {
 		tbExternalUserFollowAttributeModel
 		FindListByExternalUserid(ctx context.Context, externalUserid []string) ([]*TbExternalUserFollowAttribute, error)
+		DeleteByExternalUserIdAndUserIdAndPlatform(ctx context.Context, externalUserid, userid, crop string) error
 	}
 
 	customTbExternalUserFollowAttributeModel struct {
@@ -33,6 +34,26 @@ func NewTbExternalUserFollowAttributeModel(conn sqlx.SqlConn, c cache.CacheConf,
 	return &customTbExternalUserFollowAttributeModel{
 		defaultTbExternalUserFollowAttributeModel: newTbExternalUserFollowAttributeModel(conn, c, opts...),
 	}
+}
+
+func (m *defaultTbExternalUserFollowAttributeModel) DeleteByExternalUserIdAndUserIdAndPlatform(ctx context.Context, externalUserid, userid, crop string) error {
+
+	if len(externalUserid) == 0 || len(userid) == 0 {
+		return errors.New("参数为空")
+	}
+	sql, args, err := squirrel.Update("status").From(m.table).Where(squirrel.Eq{
+		"external_userid": externalUserid,
+		"userid":          externalUserid,
+		"platform":        crop,
+		"status":          1,
+	}).ToSql()
+
+	if err != nil {
+		return err
+	}
+	_, err = m.ExecNoCacheCtx(ctx, sql, args...)
+
+	return err
 }
 
 func (m *defaultTbExternalUserFollowAttributeModel) FindListByExternalUserid(ctx context.Context, externalUserid []string) ([]*TbExternalUserFollowAttribute, error) {

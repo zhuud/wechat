@@ -23,6 +23,7 @@ type (
 	TbExternalUserAttributeModel interface {
 		tbExternalUserAttributeModel
 		FindListByExternalUserid(ctx context.Context, externalUserid []string) ([]*TbExternalUserAttribute, error)
+		DeleteByExternalUserId(ctx context.Context, externalUserid string) error
 	}
 
 	customTbExternalUserAttributeModel struct {
@@ -35,6 +36,24 @@ func NewTbExternalUserAttributeModel(conn sqlx.SqlConn, c cache.CacheConf, opts 
 	return &customTbExternalUserAttributeModel{
 		defaultTbExternalUserAttributeModel: newTbExternalUserAttributeModel(conn, c, opts...),
 	}
+}
+
+func (m *defaultTbExternalUserAttributeModel) DeleteByExternalUserId(ctx context.Context, externalUserid string) error {
+
+	if len(externalUserid) == 0 {
+		return errors.New("参数为空")
+	}
+	sql, args, err := squirrel.Update("status").From(m.table).Where(squirrel.Eq{
+		"external_userid": externalUserid,
+		"status":          1,
+	}).ToSql()
+
+	if err != nil {
+		return err
+	}
+	_, err = m.ExecNoCacheCtx(ctx, sql, args...)
+
+	return err
 }
 
 func (m *defaultTbExternalUserAttributeModel) FindListByExternalUserid(ctx context.Context, externalUserid []string) ([]*TbExternalUserAttribute, error) {

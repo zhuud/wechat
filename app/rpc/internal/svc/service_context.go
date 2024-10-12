@@ -67,6 +67,7 @@ func NewServiceContext(c config.Config) *ServiceContext {
 
 			// model
 			ModelExternalUser:                model.NewTbExternalUserModel(msyqlConn, c.ModelRedis),
+			ModelExternalUserAttribute:       model.NewTbExternalUserAttributeModel(msyqlConn, c.ModelRedis),
 			ModelExternalUserFollow:          model.NewTbExternalUserFollowModel(msyqlConn, c.ModelRedis),
 			ModelExternalUserFollowAttribute: model.NewTbExternalUserFollowAttributeModel(msyqlConn, c.ModelRedis),
 			ModelUserServiceQrcodeModel:      model.NewUserServiceQrcodeModel(msyqlConn),
