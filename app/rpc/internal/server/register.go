@@ -23,6 +23,7 @@ func RegisterRpc(c config.Config, svcCtx *svc.ServiceContext) *cobra.Command {
 		Run: func(cmd *cobra.Command, args []string) {
 
 			s := zrpc.MustNewServer(c.RpcServerConf, func(grpcServer *grpc.Server) {
+
 				register(grpcServer, svcCtx)
 
 				if c.Mode == service.DevMode || c.Mode == service.TestMode {

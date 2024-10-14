@@ -16,9 +16,11 @@ import (
 	"github.com/zhuud/go-library/svc/kafka"
 )
 
+const syncExternalUserTopic = "5002,5003"
+
 func NewSyncExternalUserConsumer(kafkaConf kq.KqConf, svcCtx *svc.ServiceContext) func(cmd *cobra.Command, args []string) {
 	return func(cmd *cobra.Command, args []string) {
-		kafkaConf.Topic = "5002,5003"
+		kafkaConf.Topic = syncExternalUserTopic
 		kafka.Consume(kafkaConf, cmd.Use, newSyncExternalUserConsumer(cmd.Context(), svcCtx))
 	}
 }

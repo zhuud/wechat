@@ -64,6 +64,14 @@ executors.NewBulkExecutor(func(tasks []any) {
 }, bulkOpts...)
 ```
 ```
+# 异步流处理
+fx.From(generateFunc).  // 确保最后方法是没有返回值的 或者 调用Done()
+    Map(func(item any) any {}, fx.WithWorkers(32)). // 封装的Walk 有返回值 继续流处理
+    Parallel(func(item any) {}).    // 封装的Walk 没有返回值
+    // Walk(func(item any, pipe chan<- any) {}).    // 并行执行 需要手动写入ch  继续流处理
+    // ForEach(func(item any){})    // 串行执行 没有返回值
+```
+```
 # 熔断器
 brk := breaker.NewBreaker()
 brk.Do(req func() error) error

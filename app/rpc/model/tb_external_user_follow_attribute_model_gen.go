@@ -42,6 +42,7 @@ type (
 		Seq            uint64    `db:"seq"`             // 主键 | 2020-09-10
 		ExternalUserid string    `db:"external_userid"` // 外部联系人的userid | 2020-09-10
 		Userid         string    `db:"userid"`          // 联系人的userid | 2020-09-10
+		Platform       string    `db:"platform"`        // 企微平台(多企微情况) | 2020-09-10
 		AttributeType  uint64    `db:"attribute_type"`  // 类型 1:备注标签 / 2:视频号信息 | 2020-09-10
 		AttributeValue string    `db:"attribute_value"` // 类型值 | 2020-09-10
 		Extension      string    `db:"extension"`       // 扩展信息 | 2020-09-10
@@ -87,8 +88,8 @@ func (m *defaultTbExternalUserFollowAttributeModel) FindOne(ctx context.Context,
 func (m *defaultTbExternalUserFollowAttributeModel) Insert(ctx context.Context, data *TbExternalUserFollowAttribute) (sql.Result, error) {
 	tbExternalUserFollowAttributeSeqKey := fmt.Sprintf("%s%v", cacheTbExternalUserFollowAttributeSeqPrefix, data.Seq)
 	ret, err := m.ExecCtx(ctx, func(ctx context.Context, conn sqlx.SqlConn) (result sql.Result, err error) {
-		query := fmt.Sprintf("insert into %s (%s) values (?, ?, ?, ?, ?, ?)", m.table, tbExternalUserFollowAttributeRowsExpectAutoSet)
-		return conn.ExecCtx(ctx, query, data.ExternalUserid, data.Userid, data.AttributeType, data.AttributeValue, data.Extension, data.Status)
+		query := fmt.Sprintf("insert into %s (%s) values (?, ?, ?, ?, ?, ?, ?)", m.table, tbExternalUserFollowAttributeRowsExpectAutoSet)
+		return conn.ExecCtx(ctx, query, data.ExternalUserid, data.Userid, data.Platform, data.AttributeType, data.AttributeValue, data.Extension, data.Status)
 	}, tbExternalUserFollowAttributeSeqKey)
 	return ret, err
 }
@@ -97,7 +98,7 @@ func (m *defaultTbExternalUserFollowAttributeModel) Update(ctx context.Context, 
 	tbExternalUserFollowAttributeSeqKey := fmt.Sprintf("%s%v", cacheTbExternalUserFollowAttributeSeqPrefix, data.Seq)
 	_, err := m.ExecCtx(ctx, func(ctx context.Context, conn sqlx.SqlConn) (result sql.Result, err error) {
 		query := fmt.Sprintf("update %s set %s where `seq` = ?", m.table, tbExternalUserFollowAttributeRowsWithPlaceHolder)
-		return conn.ExecCtx(ctx, query, data.ExternalUserid, data.Userid, data.AttributeType, data.AttributeValue, data.Extension, data.Status, data.Seq)
+		return conn.ExecCtx(ctx, query, data.ExternalUserid, data.Userid, data.Platform, data.AttributeType, data.AttributeValue, data.Extension, data.Status, data.Seq)
 	}, tbExternalUserFollowAttributeSeqKey)
 	return err
 }

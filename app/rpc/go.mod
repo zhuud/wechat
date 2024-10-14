@@ -5,13 +5,14 @@ go 1.22.0
 require (
 	github.com/ArtisanCloud/PowerWeChat/v3 v3.2.39
 	github.com/Masterminds/squirrel v1.5.4
+	github.com/avast/retry-go v3.0.0+incompatible
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc
 	github.com/json-iterator/go v1.1.12
 	github.com/spf13/cast v1.7.0
 	github.com/spf13/cobra v1.8.1
 	github.com/zeromicro/go-queue v1.2.2
 	github.com/zeromicro/go-zero v1.7.1
-	github.com/zhuud/go-library v0.0.0-20240830110627-4d1d71ab12b9
+	github.com/zhuud/go-library v0.0.0-20240920064304-9e581ec90b91
 	go.uber.org/automaxprocs v1.5.3
 	google.golang.org/grpc v1.66.0
 	google.golang.org/protobuf v1.34.2
@@ -55,6 +56,7 @@ require (
 	github.com/klauspost/compress v1.17.9 // indirect
 	github.com/lann/builder v0.0.0-20180802200727-47ae307949d0 // indirect
 	github.com/lann/ps v0.0.0-20150810152359-62de8c46ede0 // indirect
+	github.com/larksuite/oapi-sdk-go/v3 v3.3.2 // indirect
 	github.com/magiconair/properties v1.8.7 // indirect
 	github.com/mailru/easyjson v0.7.7 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect

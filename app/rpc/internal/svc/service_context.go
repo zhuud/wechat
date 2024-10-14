@@ -16,6 +16,7 @@ import (
 
 type ServiceContext struct {
 	Config     config.Config
+	Alarm      *Alarm
 	FastHttp   *fasthttp.Client  // fast http
 	Redis      *redis.Redis      // redis
 	LocalCache *collection.Cache // local cache
@@ -54,6 +55,7 @@ func NewServiceContext(c config.Config) *ServiceContext {
 			Config: c,
 
 			// infra
+			Alarm:      &Alarm{},
 			FastHttp:   fasthttp.NewFastHttp(c.FastHttp),
 			Redis:      redisConn,
 			LocalCache: localCache,
@@ -65,6 +67,7 @@ func NewServiceContext(c config.Config) *ServiceContext {
 
 			// model
 			ModelExternalUser:                model.NewTbExternalUserModel(msyqlConn, c.ModelRedis),
+			ModelExternalUserAttribute:       model.NewTbExternalUserAttributeModel(msyqlConn, c.ModelRedis),
 			ModelExternalUserFollow:          model.NewTbExternalUserFollowModel(msyqlConn, c.ModelRedis),
 			ModelExternalUserFollowAttribute: model.NewTbExternalUserFollowAttributeModel(msyqlConn, c.ModelRedis),
 			ModelUserServiceQrcodeModel:      model.NewUserServiceQrcodeModel(msyqlConn),

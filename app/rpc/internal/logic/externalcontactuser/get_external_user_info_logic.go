@@ -2,12 +2,10 @@ package externalcontactuserlogic
 
 import (
 	"context"
+	"github.com/zeromicro/go-zero/core/logx"
 	"rpc/internal/logic/externalcontactuser/user"
 	"rpc/internal/svc"
 	"rpc/wechat"
-	"sync"
-
-	"github.com/zeromicro/go-zero/core/logx"
 )
 
 type GetExternalUserInfoLogic struct {
@@ -15,14 +13,6 @@ type GetExternalUserInfoLogic struct {
 	svcCtx *svc.ServiceContext
 	logx.Logger
 }
-
-type (
-	externalUserUnit struct {
-		User           sync.Map
-		UserFollow     sync.Map
-		UserFollowAttr sync.Map
-	}
-)
 
 func NewGetExternalUserInfoLogic(ctx context.Context, svcCtx *svc.ServiceContext) *GetExternalUserInfoLogic {
 	return &GetExternalUserInfoLogic{

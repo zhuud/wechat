@@ -1,8 +1,11 @@
 package svc
 
 import (
+	"context"
 	"fmt"
+	"github.com/spf13/cast"
 	"sync"
+	"time"
 
 	"github.com/zeromicro/go-zero/core/limit"
 	"github.com/zeromicro/go-zero/core/stores/redis"
@@ -22,17 +25,17 @@ const (
 type (
 	WechatTokenLimit struct {
 		limiters map[string]*WechatLimiter
-		redis    *redis.Redis
 	}
 	WechatLimiter [2]*limit.TokenLimiter
 )
 
 var (
-	wl       *WechatTokenLimit
-	wlOnce   sync.Once
-	keyQuota = map[string][2]int{
-		"all":          {minuteQuota, hourQuota},
-		"external_tag": {5000, 50000},
+	wl            *WechatTokenLimit
+	wlOnce        sync.Once
+	retryDuration = time.Minute
+	keyQuota      = map[string][2]int{
+		"all":           {minuteQuota, hourQuota},
+		"external_user": {5000, 50000},
 	}
 )
 
@@ -41,7 +44,6 @@ func NewTokenWechatLimit(r *redis.Redis) *WechatTokenLimit {
 	wlOnce.Do(func() {
 		wl = &WechatTokenLimit{
 			limiters: make(map[string]*WechatLimiter),
-			redis:    r,
 		}
 		for k, q := range keyQuota {
 			minuteBurst := q[0] / burst
@@ -60,6 +62,15 @@ func NewTokenWechatLimit(r *redis.Redis) *WechatTokenLimit {
 }
 
 func (wl *WechatTokenLimit) Allow(k string) bool {
+	if k != "all" {
+		l, _ := wl.limiters["all"]
+		for _, limiter := range l {
+			if !limiter.Allow() {
+				return false
+			}
+		}
+	}
+
 	l, ok := wl.limiters[k]
 	if !ok {
 		return false
@@ -70,4 +81,33 @@ func (wl *WechatTokenLimit) Allow(k string) bool {
 		}
 	}
 	return true
+}
+
+func (wl *WechatTokenLimit) WaitAllow(k string, duration time.Duration) (int64, error) {
+	if wl.Allow(k) {
+		return 0, nil
+	}
+
+	var cnt int64
+	if duration/time.Hour > 24 {
+		duration = time.Hour * 24
+	}
+
+	lctx, cancel := context.WithTimeout(context.Background(), duration)
+	defer cancel()
+
+	ticker := time.NewTicker(retryDuration)
+	defer ticker.Stop()
+
+	for {
+		select {
+		case <-ticker.C:
+			cnt++
+			if wl.Allow(k) {
+				return cnt * cast.ToInt64(retryDuration.Seconds()), nil
+			}
+		case <-lctx.Done():
+			return cast.ToInt64(duration.Seconds()), lctx.Err()
+		}
+	}
 }
