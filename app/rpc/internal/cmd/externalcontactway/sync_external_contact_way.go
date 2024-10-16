@@ -45,39 +45,35 @@ func (s *syncExternalContactWayCmd) Do(args []string) error {
 
 	getContactWayListFunc := func(source chan<- any) {
 
-		_ = retry.Do(func() error {
-			var err error
-			params := &contactWayRequest.RequestListContactWay{
-				Limit: 100,
+		var err error
+		params := &contactWayRequest.RequestListContactWay{
+			Limit: 100,
+		}
+
+		//频率控制添加
+		dur, lerr := s.svcCtx.WechatLimit.WaitAllow("external_contact_way", time.Hour*2)
+		if lerr != nil {
+			s.svcCtx.Alarm.SendLarkCtx(s.ctx, fmt.Sprintf("syncExternalUserCmd.batchGetExternal.WaitAllow dui:%d error: %v 需要重新处理后续数据", dur, lerr))
+		}
+
+		list := &contactWayResponse.ResponseListContactWay{}
+		list, err = s.svcCtx.WeCom.WithCorp(config.CropYx).ContactWay.List(ctx, params)
+		if err != nil {
+			s.Error(err)
+		}
+		for len(list.ContactWayIDs) > 0 {
+			for _, item := range list.ContactWayIDs {
+				source <- item.ConfigID
 			}
 
-			//频率控制添加
-			dur, lerr := s.svcCtx.WechatLimit.WaitAllow("external_contact_way", time.Hour*2)
-			if lerr != nil {
-				s.svcCtx.Alarm.SendLarkCtx(s.ctx, fmt.Sprintf("syncExternalUserCmd.batchGetExternal.WaitAllow dui:%d error: %v 需要重新处理后续数据", dur, lerr))
-			}
-
-			list := &contactWayResponse.ResponseListContactWay{}
+			time.Sleep(1 * time.Second)
+			params.Limit = 100
+			params.Cursor = list.NextCursor
 			list, err = s.svcCtx.WeCom.WithCorp(config.CropYx).ContactWay.List(ctx, params)
 			if err != nil {
 				s.Error(err)
-				return err
 			}
-			for len(list.ContactWayIDs) > 0 {
-				for _, item := range list.ContactWayIDs {
-					source <- item.ConfigID
-				}
-
-				time.Sleep(1 * time.Second)
-				params.Limit = 100
-				params.Cursor = list.NextCursor
-				list, err = s.svcCtx.WeCom.WithCorp(config.CropYx).ContactWay.List(ctx, params)
-				if err != nil {
-					s.Error(err)
-				}
-			}
-			return nil
-		})
+		}
 	}
 
 	getContactWayInfoFunc := func(item any) any {
