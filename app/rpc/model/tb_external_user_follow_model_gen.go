@@ -54,7 +54,7 @@ type (
 		Description       string    `db:"description"`         // 对外部联系人的描述 | 2020-09-10
 		RemarkCorpName    string    `db:"remark_corp_name"`    // 对外部联系人备注的所属公司名称 | 2020-09-10
 		RemarkPicMediaid  string    `db:"remark_pic_mediaid"`  // 对外部联系人备注的图片ID | 2020-09-10
-		Status            uint64    `db:"status"`              // 状态 (0:删除,1:正常) | 2020-09-10
+		Status            int       `db:"status"`              // 状态 (0:删除,1:正常) | 2020-09-10
 		CreatedAt         time.Time `db:"created_at"`          // 创建时间 | 2020-09-10
 		UpdatedAt         time.Time `db:"updated_at"`          // 更新时间 | 2020-09-10
 	}

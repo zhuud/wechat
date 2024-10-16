@@ -15,6 +15,13 @@ const (
 
 var _ TbExternalUserFollowModel = (*customTbExternalUserFollowModel)(nil)
 
+const (
+	DelStatus             = 0 //互相删除
+	NormalStatus          = 1 //正常
+	ExternalUserDelStatus = 2 //用户删除
+	StaffDelStatus        = 3 //客服删除
+)
+
 type (
 	// TbExternalUserFollowModel is an interface to be customized, add more methods here,
 	// and implement the added methods in customTbExternalUserFollowModel.
