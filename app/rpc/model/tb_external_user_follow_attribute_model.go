@@ -8,12 +8,13 @@ import (
 	"github.com/zeromicro/go-zero/core/stores/sqlx"
 )
 
-var _ TbExternalUserFollowAttributeModel = (*customTbExternalUserFollowAttributeModel)(nil)
-
 const (
-	AttributeTypeRemarkTag = 1
-	AttributeTypeVideo     = 2
+	TbExternalUserFollowAttrNormalStatus = 1
+	AttributeTypeRemarkTag               = 1
+	AttributeTypeVideo                   = 2
 )
+
+var _ TbExternalUserFollowAttributeModel = (*customTbExternalUserFollowAttributeModel)(nil)
 
 type (
 	// TbExternalUserFollowAttributeModel is an interface to be customized, add more methods here,
@@ -21,7 +22,7 @@ type (
 	TbExternalUserFollowAttributeModel interface {
 		tbExternalUserFollowAttributeModel
 		FindListByExternalUserid(ctx context.Context, externalUserid []string) ([]*TbExternalUserFollowAttribute, error)
-		DeleteByExternalUserIdAndUserIdAndPlatform(ctx context.Context, externalUserid, userid, crop string) error
+		DeleteByExternalUserIdAndUserId(ctx context.Context, externalUserid, userid, crop string) error
 	}
 
 	customTbExternalUserFollowAttributeModel struct {
@@ -36,7 +37,7 @@ func NewTbExternalUserFollowAttributeModel(conn sqlx.SqlConn, c cache.CacheConf,
 	}
 }
 
-func (m *defaultTbExternalUserFollowAttributeModel) DeleteByExternalUserIdAndUserIdAndPlatform(ctx context.Context, externalUserid, userid, crop string) error {
+func (m *defaultTbExternalUserFollowAttributeModel) DeleteByExternalUserIdAndUserId(ctx context.Context, externalUserid, userid, crop string) error {
 
 	if len(externalUserid) == 0 || len(userid) == 0 {
 		return errors.New("参数为空")
@@ -44,8 +45,8 @@ func (m *defaultTbExternalUserFollowAttributeModel) DeleteByExternalUserIdAndUse
 	sql, args, err := squirrel.Update("status").From(m.table).Where(squirrel.Eq{
 		"external_userid": externalUserid,
 		"userid":          externalUserid,
-		"platform":        crop,
-		"status":          1,
+		"crop":            crop,
+		"status":          TbExternalUserFollowAttrNormalStatus,
 	}).ToSql()
 
 	if err != nil {

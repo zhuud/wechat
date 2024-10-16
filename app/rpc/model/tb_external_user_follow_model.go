@@ -9,6 +9,10 @@ import (
 	"github.com/zeromicro/go-zero/core/stores/sqlx"
 )
 
+const (
+	TbExternalUserFollowNormalStatus = 1
+)
+
 var _ TbExternalUserFollowModel = (*customTbExternalUserFollowModel)(nil)
 
 type (
@@ -62,7 +66,7 @@ func (m *defaultTbExternalUserFollowModel) FindOneByExternalUserIdAndUserId(ctx 
 	sql, args, err := squirrel.Select(tbExternalUserFollowRows).From(m.table).Where(squirrel.Eq{
 		"external_userid": externalUserid,
 		"userid":          userid,
-		"platform":        crop,
+		"crop":            crop,
 		"status":          1,
 	}).ToSql()
 	if err != nil {

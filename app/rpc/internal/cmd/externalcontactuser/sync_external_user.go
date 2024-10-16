@@ -105,12 +105,12 @@ func (s *syncExternalUserCmd) batchGetExternal(crop string, userIdList []string)
 		// TODO 测试
 		limit = 1
 		// limit            = 100
-		maxSize = 20000
+		maxSize = 100000
 		size    = 0
 	)
 
 	for {
-		// 一个user最多5000用户 正常不会循环这么多次
+		// 一个user最多10000用户 正常不会循环这么多次
 		size++
 		if size > maxSize {
 			s.svcCtx.Alarm.SendLarkCtx(s.ctx, fmt.Sprintf("syncExternalUserCmd.batchGetExternal.maxSize userIdList: %v, cursor:%s, error: 分页获取循坏异常 有可能死循环", userIdList, cursor))
