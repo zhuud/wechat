@@ -4,9 +4,10 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"rpc/internal/logic/externalcontactuser/save"
 	"time"
 
+	"rpc/internal/config"
+	"rpc/internal/logic/externalcontactuser/save"
 	"rpc/internal/svc"
 
 	"github.com/ArtisanCloud/PowerWeChat/v3/src/work/externalContact/response"
@@ -39,7 +40,7 @@ func newSyncExternalUserCmd(ctx context.Context, svcCtx *svc.ServiceContext) *sy
 }
 
 func (s *syncExternalUserCmd) Do(args []string) error {
-	crop := "yx"
+	crop := config.CropYx
 	if len(args) > 0 {
 		crop = args[0]
 	}
@@ -157,7 +158,7 @@ func (s *syncExternalUserCmd) getFollowUserList() ([]string, error) {
 	userIdList := make([]string, 0)
 
 	err := retry.Do(func() error {
-		userList, err := s.svcCtx.WeCom.WithCorp("yx").ExternalUser.GetFollowUsers(s.ctx)
+		userList, err := s.svcCtx.WeCom.WithCorp(config.CropYx).ExternalUser.GetFollowUsers(s.ctx)
 		if err != nil {
 			return err
 		}

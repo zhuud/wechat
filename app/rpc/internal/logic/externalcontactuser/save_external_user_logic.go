@@ -2,10 +2,13 @@ package externalcontactuserlogic
 
 import (
 	"context"
-	"github.com/zeromicro/go-zero/core/logx"
+
+	"rpc/internal/config"
 	"rpc/internal/svc"
 	"rpc/internal/types"
 	"rpc/model"
+
+	"github.com/zeromicro/go-zero/core/logx"
 )
 
 type SaveExternalUserLogic struct {
@@ -26,7 +29,7 @@ func (l *SaveExternalUserLogic) SyncExternalUser(externalUserData types.External
 	if externalUserData.ExternalUserID == `` || externalUserData.ToUserName == `` {
 		return
 	}
-	externalUser, err := l.svcCtx.WeCom.WithCorp(`yx`).ExternalUser.Get(l.ctx, externalUserData.ExternalUserID, `CURSOR`)
+	externalUser, err := l.svcCtx.WeCom.WithCorp(config.CropYx).ExternalUser.Get(l.ctx, externalUserData.ExternalUserID, `CURSOR`)
 	if err != nil || externalUser == nil {
 		return
 	}

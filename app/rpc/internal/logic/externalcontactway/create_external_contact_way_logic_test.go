@@ -3,14 +3,16 @@ package externalcontactwaylogic
 import (
 	"context"
 	"fmt"
-	request2 "github.com/ArtisanCloud/PowerWeChat/v3/src/work/externalContact/contactWay/request"
-	"github.com/davecgh/go-spew/spew"
-	"github.com/zeromicro/go-zero/core/logx"
 	"reflect"
+	"testing"
+
 	"rpc/internal/config"
 	"rpc/internal/svc"
 	"rpc/wechat"
-	"testing"
+
+	request2 "github.com/ArtisanCloud/PowerWeChat/v3/src/work/externalContact/contactWay/request"
+	"github.com/davecgh/go-spew/spew"
+	"github.com/zeromicro/go-zero/core/logx"
 )
 
 func TestCreateExternalContactWayLogic_CreateExternalContactWay(t *testing.T) {
@@ -54,7 +56,7 @@ func Test_CreateExternalContactWay(t *testing.T) {
 	var svcCtx *svc.ServiceContext = svc.NewServiceContext(config.MustLoad())
 
 	req := &request2.RequestListContactWay{Limit: 10}
-	list, err := svcCtx.WeCom.WithCorp("yx").ContactWay.List(context.Background(), req)
+	list, err := svcCtx.WeCom.WithCorp(config.CropYx).ContactWay.List(context.Background(), req)
 	spew.Dump(err)
 	fmt.Printf("%+#v", list)
 }

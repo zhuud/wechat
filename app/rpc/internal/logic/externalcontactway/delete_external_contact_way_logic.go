@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 
+	"rpc/internal/config"
 	"rpc/internal/svc"
 	"rpc/wechat"
 
@@ -32,7 +33,7 @@ func (l *DeleteExternalContactWayLogic) DeleteExternalContactWay(in *wechat.Exte
 	}
 
 	// 调用企微删除企业已配置的「联系我」方式接口
-	_, err := l.svcCtx.WeCom.WithCorp("yx").ContactWay.Delete(l.ctx, in.ConfigId)
+	_, err := l.svcCtx.WeCom.WithCorp(config.CropYx).ContactWay.Delete(l.ctx, in.ConfigId)
 	if err != nil {
 		l.Logger.Error("ContactWay_Delete_Err", err)
 		return nil, err

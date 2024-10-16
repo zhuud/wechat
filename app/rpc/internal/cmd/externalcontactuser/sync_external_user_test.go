@@ -13,6 +13,6 @@ import (
 func Test(t *testing.T) {
 	c := config.MustLoad()
 	svcCtx := svc.NewServiceContext(c)
-	err := newSyncExternalUserCmd(context.Background(), svcCtx).Do([]string{"yx"})
+	err := newSyncExternalUserCmd(context.Background(), svcCtx).Do([]string{config.CropYx})
 	spew.Dump(err)
 }

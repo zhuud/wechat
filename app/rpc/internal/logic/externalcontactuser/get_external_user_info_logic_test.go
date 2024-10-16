@@ -58,12 +58,12 @@ func Test_GetExternalUserInfo(t *testing.T) {
 }
 
 func Test_Get(t *testing.T) {
-	spew.Dump(svcCtx.WeCom.WithCorp("yx").ExternalUser.Get(context.Background(), "wmYYltDAAAlg093GN65jtwLAn1VqOi5g", ""))
+	spew.Dump(svcCtx.WeCom.WithCorp(config.CropYx).ExternalUser.Get(context.Background(), "wmYYltDAAAlg093GN65jtwLAn1VqOi5g", ""))
 	return
 }
 
 func Test_GetByUserId(t *testing.T) {
 	prasms := &request2.RequestListContactWay{Limit: 10}
-	list, err := svcCtx.WeCom.WithCorp("yx").ContactWay.List(context.Background(), prasms)
+	list, err := svcCtx.WeCom.WithCorp(config.CropYx).ContactWay.List(context.Background(), prasms)
 	spew.Dump(list, err)
 }

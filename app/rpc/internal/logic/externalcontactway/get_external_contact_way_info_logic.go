@@ -3,6 +3,7 @@ package externalcontactwaylogic
 import (
 	"context"
 
+	"rpc/internal/config"
 	"rpc/internal/svc"
 	"rpc/wechat"
 
@@ -26,7 +27,7 @@ func NewGetExternalContactWayInfoLogic(ctx context.Context, svcCtx *svc.ServiceC
 func (l *GetExternalContactWayInfoLogic) GetExternalContactWayInfo(in *wechat.ExternalContactWayReq) (*wechat.ExternalContactWayInfoResp, error) {
 	// todo: add your logic here and delete this line
 
-	configData, err := l.svcCtx.WeCom.WithCorp("yx").ContactWay.Get(context.Background(), in.ConfigId)
+	configData, err := l.svcCtx.WeCom.WithCorp(config.CropYx).ContactWay.Get(context.Background(), in.ConfigId)
 
 	if err != nil {
 		return nil, err
@@ -43,9 +44,7 @@ func (l *GetExternalContactWayInfoLogic) GetExternalContactWayInfo(in *wechat.Ex
 			ExpiresIn:     int32(configData.ContactWay.ExpiresIn),
 			ChatExpiresIn: int32(configData.ContactWay.ChatExpiresIn),
 			Unionid:       configData.ContactWay.UnionID,
-			Conclusions:   &wechat.ExternalContactWayConclusion{
-
-			},
+			Conclusions:   &wechat.ExternalContactWayConclusion{},
 		},
 	}, nil
 }
