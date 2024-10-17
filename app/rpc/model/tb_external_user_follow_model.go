@@ -12,10 +12,10 @@ import (
 var _ TbExternalUserFollowModel = (*customTbExternalUserFollowModel)(nil)
 
 const (
-	DelStatus             = 0 //互相删除
-	NormalStatus          = 1 //正常
-	ExternalUserDelStatus = 2 //用户删除
-	StaffDelStatus        = 3 //客服删除
+	DelStatus            = 0 //互相删除
+	NormalStatus         = 1 //正常
+	FollowUserDelCStatus = 2 //客服删除用户
+	CDelFollowUserStatus = 3 //用户删除客服
 )
 
 type (

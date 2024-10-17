@@ -43,8 +43,8 @@ type (
 		GroupId   string    `db:"group_id"`   // 标签组id | 2020-09-10
 		GroupName string    `db:"group_name"` // 标签组名字 | 2020-09-10
 		Name      string    `db:"name"`       // 标签名字 | 2020-09-10
-		Weight    uint64    `db:"weight"`     // 排序的次序值，order值大的排序靠前 微信为order关键字 | 2020-09-10
-		Status    uint64    `db:"status"`     // 状态 (0:删除,1:正常) | 2020-09-10
+		Weight    int64     `db:"weight"`     // 排序的次序值，order值大的排序靠前 微信为order关键字 | 2020-09-10
+		Status    int64     `db:"status"`     // 状态 (0:删除,1:正常) | 2020-09-10
 		CreatedAt time.Time `db:"created_at"` // 创建时间 | 2020-09-10
 		UpdatedAt time.Time `db:"updated_at"` // 更新时间 | 2020-09-10
 	}

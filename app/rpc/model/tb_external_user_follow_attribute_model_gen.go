@@ -28,9 +28,9 @@ var (
 type (
 	tbExternalUserFollowAttributeModel interface {
 		Insert(ctx context.Context, data *TbExternalUserFollowAttribute) (sql.Result, error)
-		FindOne(ctx context.Context, seq uint64) (*TbExternalUserFollowAttribute, error)
+		FindOne(ctx context.Context, seq int64) (*TbExternalUserFollowAttribute, error)
 		Update(ctx context.Context, data *TbExternalUserFollowAttribute) error
-		Delete(ctx context.Context, seq uint64) error
+		Delete(ctx context.Context, seq int64) error
 	}
 
 	defaultTbExternalUserFollowAttributeModel struct {
@@ -39,14 +39,14 @@ type (
 	}
 
 	TbExternalUserFollowAttribute struct {
-		Seq            uint64    `db:"seq"`             // 主键 | 2020-09-10
+		Seq            int64     `db:"seq"`             // 主键 | 2020-09-10
 		ExternalUserid string    `db:"external_userid"` // 外部联系人的userid | 2020-09-10
 		Userid         string    `db:"userid"`          // 联系人的userid | 2020-09-10
 		Platform       string    `db:"platform"`        // 企微平台(多企微情况) | 2020-09-10
-		AttributeType  uint64    `db:"attribute_type"`  // 类型 1:备注标签 / 2:视频号信息 | 2020-09-10
+		AttributeType  int64     `db:"attribute_type"`  // 类型 1:备注标签 / 2:视频号信息 | 2020-09-10
 		AttributeValue string    `db:"attribute_value"` // 类型值 | 2020-09-10
 		Extension      string    `db:"extension"`       // 扩展信息 | 2020-09-10
-		Status         uint64    `db:"status"`          // 状态 (0:删除,1:正常) | 2020-09-10
+		Status         int64     `db:"status"`          // 状态 (0:删除,1:正常) | 2020-09-10
 		CreatedAt      time.Time `db:"created_at"`      // 创建时间 | 2020-09-10
 		UpdatedAt      time.Time `db:"updated_at"`      // 更新时间 | 2020-09-10
 	}
@@ -59,7 +59,7 @@ func newTbExternalUserFollowAttributeModel(conn sqlx.SqlConn, c cache.CacheConf,
 	}
 }
 
-func (m *defaultTbExternalUserFollowAttributeModel) Delete(ctx context.Context, seq uint64) error {
+func (m *defaultTbExternalUserFollowAttributeModel) Delete(ctx context.Context, seq int64) error {
 	tbExternalUserFollowAttributeSeqKey := fmt.Sprintf("%s%v", cacheTbExternalUserFollowAttributeSeqPrefix, seq)
 	_, err := m.ExecCtx(ctx, func(ctx context.Context, conn sqlx.SqlConn) (result sql.Result, err error) {
 		query := fmt.Sprintf("delete from %s where `seq` = ?", m.table)
@@ -68,7 +68,7 @@ func (m *defaultTbExternalUserFollowAttributeModel) Delete(ctx context.Context, 
 	return err
 }
 
-func (m *defaultTbExternalUserFollowAttributeModel) FindOne(ctx context.Context, seq uint64) (*TbExternalUserFollowAttribute, error) {
+func (m *defaultTbExternalUserFollowAttributeModel) FindOne(ctx context.Context, seq int64) (*TbExternalUserFollowAttribute, error) {
 	tbExternalUserFollowAttributeSeqKey := fmt.Sprintf("%s%v", cacheTbExternalUserFollowAttributeSeqPrefix, seq)
 	var resp TbExternalUserFollowAttribute
 	err := m.QueryRowCtx(ctx, &resp, tbExternalUserFollowAttributeSeqKey, func(ctx context.Context, conn sqlx.SqlConn, v any) error {

@@ -28,9 +28,9 @@ var (
 type (
 	tbExternalUserAttributeModel interface {
 		Insert(ctx context.Context, data *TbExternalUserAttribute) (sql.Result, error)
-		FindOne(ctx context.Context, seq uint64) (*TbExternalUserAttribute, error)
+		FindOne(ctx context.Context, seq int64) (*TbExternalUserAttribute, error)
 		Update(ctx context.Context, data *TbExternalUserAttribute) error
-		Delete(ctx context.Context, seq uint64) error
+		Delete(ctx context.Context, seq int64) error
 	}
 
 	defaultTbExternalUserAttributeModel struct {
@@ -39,12 +39,12 @@ type (
 	}
 
 	TbExternalUserAttribute struct {
-		Seq            uint64    `db:"seq"`             // 主键 | 2020-09-10
+		Seq            int64     `db:"seq"`             // 主键 | 2020-09-10
 		ExternalUserid string    `db:"external_userid"` // 外部联系人的userid | 2020-09-10
-		AttributeType  uint64    `db:"attribute_type"`  // 类型 0:文本 1:网页 / 2:小程序 | 2020-09-10
+		AttributeType  int64     `db:"attribute_type"`  // 类型 0:文本 1:网页 / 2:小程序 | 2020-09-10
 		AttributeValue string    `db:"attribute_value"` // 类型值 | 2020-09-10
 		Extension      string    `db:"extension"`       // 扩展信息 | 2020-09-10
-		Status         uint64    `db:"status"`          // 状态 (0:删除,1:正常) | 2020-09-10
+		Status         int64     `db:"status"`          // 状态 (0:删除,1:正常) | 2020-09-10
 		CreatedAt      time.Time `db:"created_at"`      // 创建时间 | 2020-09-10
 		UpdatedAt      time.Time `db:"updated_at"`      // 更新时间 | 2020-09-10
 	}
@@ -57,7 +57,7 @@ func newTbExternalUserAttributeModel(conn sqlx.SqlConn, c cache.CacheConf, opts 
 	}
 }
 
-func (m *defaultTbExternalUserAttributeModel) Delete(ctx context.Context, seq uint64) error {
+func (m *defaultTbExternalUserAttributeModel) Delete(ctx context.Context, seq int64) error {
 	tbExternalUserAttributeSeqKey := fmt.Sprintf("%s%v", cacheTbExternalUserAttributeSeqPrefix, seq)
 	_, err := m.ExecCtx(ctx, func(ctx context.Context, conn sqlx.SqlConn) (result sql.Result, err error) {
 		query := fmt.Sprintf("delete from %s where `seq` = ?", m.table)
@@ -66,7 +66,7 @@ func (m *defaultTbExternalUserAttributeModel) Delete(ctx context.Context, seq ui
 	return err
 }
 
-func (m *defaultTbExternalUserAttributeModel) FindOne(ctx context.Context, seq uint64) (*TbExternalUserAttribute, error) {
+func (m *defaultTbExternalUserAttributeModel) FindOne(ctx context.Context, seq int64) (*TbExternalUserAttribute, error) {
 	tbExternalUserAttributeSeqKey := fmt.Sprintf("%s%v", cacheTbExternalUserAttributeSeqPrefix, seq)
 	var resp TbExternalUserAttribute
 	err := m.QueryRowCtx(ctx, &resp, tbExternalUserAttributeSeqKey, func(ctx context.Context, conn sqlx.SqlConn, v any) error {
