@@ -5,7 +5,6 @@ import (
 	"errors"
 
 	"github.com/Masterminds/squirrel"
-	"github.com/zeromicro/go-zero/core/stores/cache"
 	"github.com/zeromicro/go-zero/core/stores/sqlx"
 )
 
@@ -29,9 +28,9 @@ type (
 )
 
 // NewTbExternalUserModel returns a model for the database table.
-func NewTbExternalUserModel(conn sqlx.SqlConn, c cache.CacheConf, opts ...cache.Option) TbExternalUserModel {
+func NewTbExternalUserModel(conn sqlx.SqlConn) TbExternalUserModel {
 	return &customTbExternalUserModel{
-		defaultTbExternalUserModel: newTbExternalUserModel(conn, c, opts...),
+		defaultTbExternalUserModel: newTbExternalUserModel(conn),
 	}
 }
 
@@ -49,7 +48,7 @@ func (m *customTbExternalUserModel) FindListByExternalUserid(ctx context.Context
 		return resp, err
 	}
 
-	err = m.QueryRowsNoCacheCtx(ctx, &resp, sql, args...)
+	err = m.conn.QueryRowsCtx(ctx, &resp, sql, args...)
 
 	return resp, err
 }

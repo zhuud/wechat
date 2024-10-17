@@ -31,7 +31,7 @@ https://go-zero.dev/docs/tutorials/cli/rpc
 https://go-zero.dev/docs/tutorials/cli/api  
 https://go-zero.dev/docs/tutorials/cli/model  
 > goctl api go -api wechat.api -dir . --style=go_zero
-> goctl model mysql ddl --cache=true --style=go_zero --src=sql/external_user.sql
+> goctl model mysql ddl --cache=false --style=go_zero --src=sql/external_user.sql
 > goctl rpc protoc wechat.proto  --go_out=. --go-grpc_out=. --zrpc_out=. -m --style go_zero
 
 > rpc client 全部目录都可以删除重新生成   

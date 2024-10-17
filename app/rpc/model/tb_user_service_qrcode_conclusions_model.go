@@ -1,7 +1,6 @@
 package model
 
 import (
-	"github.com/zeromicro/go-zero/core/stores/cache"
 	"github.com/zeromicro/go-zero/core/stores/sqlx"
 )
 
@@ -20,8 +19,8 @@ type (
 )
 
 // NewTbUserServiceQrcodeConclusionsModel returns a model for the database table.
-func NewTbUserServiceQrcodeConclusionsModel(conn sqlx.SqlConn, c cache.CacheConf, opts ...cache.Option) TbUserServiceQrcodeConclusionsModel {
+func NewTbUserServiceQrcodeConclusionsModel(conn sqlx.SqlConn) TbUserServiceQrcodeConclusionsModel {
 	return &customTbUserServiceQrcodeConclusionsModel{
-		defaultTbUserServiceQrcodeConclusionsModel: newTbUserServiceQrcodeConclusionsModel(conn, c, opts...),
+		defaultTbUserServiceQrcodeConclusionsModel: newTbUserServiceQrcodeConclusionsModel(conn),
 	}
 }

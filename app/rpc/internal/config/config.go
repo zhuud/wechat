@@ -10,7 +10,10 @@ import (
 	"github.com/zhuud/go-library/svc/fasthttp"
 )
 
-const LocalCacheExpire = time.Second * 60
+const (
+	LocalCacheExpire = time.Second * 60
+	CropYx           = "yx"
+)
 
 // Config 总配置
 type Config struct {
@@ -26,14 +29,15 @@ type Config struct {
 // Config 子配置
 type (
 	MysqlConf struct {
-		DataSource      string `json:",optional"`
-		Timeout         string `json:",default=1s"`
-		ReadTimeout     string `json:",default=5s"`
-		WriteTimeout    string `json:",default=5s"`
-		MaxIdleConn     int    `json:",optional"`
-		MaxOpenConn     int    `json:",optional"`
-		ConnMaxLifeTime int    `json:",optional"`
-		ConnMaxIdleTime int    `json:",optional"`
+		WechatDataSource  string `json:",optional"`
+		BizUserDataSource string `json:",optional"`
+		Timeout           string `json:",default=1s"`
+		ReadTimeout       string `json:",default=5s"`
+		WriteTimeout      string `json:",default=5s"`
+		MaxIdleConn       int    `json:",optional"`
+		MaxOpenConn       int    `json:",optional"`
+		ConnMaxLifeTime   int    `json:",optional"`
+		ConnMaxIdleTime   int    `json:",optional"`
 	}
 
 	WeComConf struct {

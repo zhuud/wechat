@@ -10,8 +10,6 @@ import (
 	"time"
 
 	"github.com/zeromicro/go-zero/core/stores/builder"
-	"github.com/zeromicro/go-zero/core/stores/cache"
-	"github.com/zeromicro/go-zero/core/stores/sqlc"
 	"github.com/zeromicro/go-zero/core/stores/sqlx"
 	"github.com/zeromicro/go-zero/core/stringx"
 )
@@ -21,62 +19,54 @@ var (
 	tbExternalUserAttributeRows                = strings.Join(tbExternalUserAttributeFieldNames, ",")
 	tbExternalUserAttributeRowsExpectAutoSet   = strings.Join(stringx.Remove(tbExternalUserAttributeFieldNames, "`seq`", "`create_at`", "`create_time`", "`created_at`", "`update_at`", "`update_time`", "`updated_at`"), ",")
 	tbExternalUserAttributeRowsWithPlaceHolder = strings.Join(stringx.Remove(tbExternalUserAttributeFieldNames, "`seq`", "`create_at`", "`create_time`", "`created_at`", "`update_at`", "`update_time`", "`updated_at`"), "=?,") + "=?"
-
-	cacheTbExternalUserAttributeSeqPrefix = "cache:tbExternalUserAttribute:seq:"
 )
 
 type (
 	tbExternalUserAttributeModel interface {
 		Insert(ctx context.Context, data *TbExternalUserAttribute) (sql.Result, error)
-		FindOne(ctx context.Context, seq uint64) (*TbExternalUserAttribute, error)
+		FindOne(ctx context.Context, seq int64) (*TbExternalUserAttribute, error)
 		Update(ctx context.Context, data *TbExternalUserAttribute) error
-		Delete(ctx context.Context, seq uint64) error
+		Delete(ctx context.Context, seq int64) error
 	}
 
 	defaultTbExternalUserAttributeModel struct {
-		sqlc.CachedConn
+		conn  sqlx.SqlConn
 		table string
 	}
 
 	TbExternalUserAttribute struct {
-		Seq            uint64    `db:"seq"`             // 主键 | 2020-09-10
+		Seq            int64     `db:"seq"`             // 主键 | 2020-09-10
 		ExternalUserid string    `db:"external_userid"` // 外部联系人的userid | 2020-09-10
-		AttributeType  uint64    `db:"attribute_type"`  // 类型 0:文本 1:网页 / 2:小程序 | 2020-09-10
+		AttributeType  int64     `db:"attribute_type"`  // 类型 0:文本 1:网页 / 2:小程序 | 2020-09-10
 		AttributeValue string    `db:"attribute_value"` // 类型值 | 2020-09-10
 		Extension      string    `db:"extension"`       // 扩展信息 | 2020-09-10
-		Status         uint64    `db:"status"`          // 状态 (0:删除,1:正常) | 2020-09-10
+		Status         int64     `db:"status"`          // 状态 (0:删除,1:正常) | 2020-09-10
 		CreatedAt      time.Time `db:"created_at"`      // 创建时间 | 2020-09-10
 		UpdatedAt      time.Time `db:"updated_at"`      // 更新时间 | 2020-09-10
 	}
 )
 
-func newTbExternalUserAttributeModel(conn sqlx.SqlConn, c cache.CacheConf, opts ...cache.Option) *defaultTbExternalUserAttributeModel {
+func newTbExternalUserAttributeModel(conn sqlx.SqlConn) *defaultTbExternalUserAttributeModel {
 	return &defaultTbExternalUserAttributeModel{
-		CachedConn: sqlc.NewConn(conn, c, opts...),
-		table:      "`tb_external_user_attribute`",
+		conn:  conn,
+		table: "`tb_external_user_attribute`",
 	}
 }
 
-func (m *defaultTbExternalUserAttributeModel) Delete(ctx context.Context, seq uint64) error {
-	tbExternalUserAttributeSeqKey := fmt.Sprintf("%s%v", cacheTbExternalUserAttributeSeqPrefix, seq)
-	_, err := m.ExecCtx(ctx, func(ctx context.Context, conn sqlx.SqlConn) (result sql.Result, err error) {
-		query := fmt.Sprintf("delete from %s where `seq` = ?", m.table)
-		return conn.ExecCtx(ctx, query, seq)
-	}, tbExternalUserAttributeSeqKey)
+func (m *defaultTbExternalUserAttributeModel) Delete(ctx context.Context, seq int64) error {
+	query := fmt.Sprintf("delete from %s where `seq` = ?", m.table)
+	_, err := m.conn.ExecCtx(ctx, query, seq)
 	return err
 }
 
-func (m *defaultTbExternalUserAttributeModel) FindOne(ctx context.Context, seq uint64) (*TbExternalUserAttribute, error) {
-	tbExternalUserAttributeSeqKey := fmt.Sprintf("%s%v", cacheTbExternalUserAttributeSeqPrefix, seq)
+func (m *defaultTbExternalUserAttributeModel) FindOne(ctx context.Context, seq int64) (*TbExternalUserAttribute, error) {
+	query := fmt.Sprintf("select %s from %s where `seq` = ? limit 1", tbExternalUserAttributeRows, m.table)
 	var resp TbExternalUserAttribute
-	err := m.QueryRowCtx(ctx, &resp, tbExternalUserAttributeSeqKey, func(ctx context.Context, conn sqlx.SqlConn, v any) error {
-		query := fmt.Sprintf("select %s from %s where `seq` = ? limit 1", tbExternalUserAttributeRows, m.table)
-		return conn.QueryRowCtx(ctx, v, query, seq)
-	})
+	err := m.conn.QueryRowCtx(ctx, &resp, query, seq)
 	switch err {
 	case nil:
 		return &resp, nil
-	case sqlc.ErrNotFound:
+	case sqlx.ErrNotFound:
 		return nil, ErrNotFound
 	default:
 		return nil, err
@@ -84,30 +74,15 @@ func (m *defaultTbExternalUserAttributeModel) FindOne(ctx context.Context, seq u
 }
 
 func (m *defaultTbExternalUserAttributeModel) Insert(ctx context.Context, data *TbExternalUserAttribute) (sql.Result, error) {
-	tbExternalUserAttributeSeqKey := fmt.Sprintf("%s%v", cacheTbExternalUserAttributeSeqPrefix, data.Seq)
-	ret, err := m.ExecCtx(ctx, func(ctx context.Context, conn sqlx.SqlConn) (result sql.Result, err error) {
-		query := fmt.Sprintf("insert into %s (%s) values (?, ?, ?, ?, ?)", m.table, tbExternalUserAttributeRowsExpectAutoSet)
-		return conn.ExecCtx(ctx, query, data.ExternalUserid, data.AttributeType, data.AttributeValue, data.Extension, data.Status)
-	}, tbExternalUserAttributeSeqKey)
+	query := fmt.Sprintf("insert into %s (%s) values (?, ?, ?, ?, ?)", m.table, tbExternalUserAttributeRowsExpectAutoSet)
+	ret, err := m.conn.ExecCtx(ctx, query, data.ExternalUserid, data.AttributeType, data.AttributeValue, data.Extension, data.Status)
 	return ret, err
 }
 
 func (m *defaultTbExternalUserAttributeModel) Update(ctx context.Context, data *TbExternalUserAttribute) error {
-	tbExternalUserAttributeSeqKey := fmt.Sprintf("%s%v", cacheTbExternalUserAttributeSeqPrefix, data.Seq)
-	_, err := m.ExecCtx(ctx, func(ctx context.Context, conn sqlx.SqlConn) (result sql.Result, err error) {
-		query := fmt.Sprintf("update %s set %s where `seq` = ?", m.table, tbExternalUserAttributeRowsWithPlaceHolder)
-		return conn.ExecCtx(ctx, query, data.ExternalUserid, data.AttributeType, data.AttributeValue, data.Extension, data.Status, data.Seq)
-	}, tbExternalUserAttributeSeqKey)
+	query := fmt.Sprintf("update %s set %s where `seq` = ?", m.table, tbExternalUserAttributeRowsWithPlaceHolder)
+	_, err := m.conn.ExecCtx(ctx, query, data.ExternalUserid, data.AttributeType, data.AttributeValue, data.Extension, data.Status, data.Seq)
 	return err
-}
-
-func (m *defaultTbExternalUserAttributeModel) formatPrimary(primary any) string {
-	return fmt.Sprintf("%s%v", cacheTbExternalUserAttributeSeqPrefix, primary)
-}
-
-func (m *defaultTbExternalUserAttributeModel) queryPrimary(ctx context.Context, conn sqlx.SqlConn, v, primary any) error {
-	query := fmt.Sprintf("select %s from %s where `seq` = ? limit 1", tbExternalUserAttributeRows, m.table)
-	return conn.QueryRowCtx(ctx, v, query, primary)
 }
 
 func (m *defaultTbExternalUserAttributeModel) tableName() string {

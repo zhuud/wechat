@@ -25,10 +25,11 @@ type ServiceContext struct {
 	WechatLimit *WechatTokenLimit // 企微限流
 
 	// model
+	ModelBizUser                     model.TbUserOpenModel
 	ModelExternalUser                model.TbExternalUserModel
 	ModelExternalUserFollow          model.TbExternalUserFollowModel
 	ModelExternalUserFollowAttribute model.TbExternalUserFollowAttributeModel
-	ModelUserServiceQrcodeModel      model.UserServiceQrcodeModel
+	ModelUserServiceQrcodeModel      model.TbUserServiceQrcodeModel
 	ModelUserServiceQrcodeConclusion model.TbUserServiceQrcodeConclusionsModel
 	ModelExternalUserTag             model.TbExternalUserTagModel
 	ModelExternalUserAttribute       model.TbExternalUserAttributeModel
@@ -46,7 +47,8 @@ func NewServiceContext(c config.Config) *ServiceContext {
 		localCache, err := collection.NewCache(config.LocalCacheExpire)
 		logx.Must(err)
 		// mysql
-		msyqlConn := sqlx.NewMysql(c.WechatDb.DataSource)
+		wechatDbConn := sqlx.NewMysql(c.WechatDb.WechatDataSource)
+		bizUserDbConn := sqlx.NewMysql(c.WechatDb.BizUserDataSource)
 		// redis
 		redisConn := redis.MustNewRedis(c.CacheRedis)
 
@@ -66,12 +68,13 @@ func NewServiceContext(c config.Config) *ServiceContext {
 			WechatLimit: NewTokenWechatLimit(redisConn),
 
 			// model
-			ModelExternalUser:                model.NewTbExternalUserModel(msyqlConn, c.ModelRedis),
-			ModelExternalUserAttribute:       model.NewTbExternalUserAttributeModel(msyqlConn, c.ModelRedis),
-			ModelExternalUserFollow:          model.NewTbExternalUserFollowModel(msyqlConn, c.ModelRedis),
-			ModelExternalUserFollowAttribute: model.NewTbExternalUserFollowAttributeModel(msyqlConn, c.ModelRedis),
-			ModelUserServiceQrcodeModel:      model.NewUserServiceQrcodeModel(msyqlConn),
-			ModelUserServiceQrcodeConclusion: model.NewTbUserServiceQrcodeConclusionsModel(msyqlConn, c.ModelRedis),
+			ModelBizUser:                     model.NewTbUserOpenModel(bizUserDbConn),
+			ModelExternalUser:                model.NewTbExternalUserModel(wechatDbConn),
+			ModelExternalUserAttribute:       model.NewTbExternalUserAttributeModel(wechatDbConn),
+			ModelExternalUserFollow:          model.NewTbExternalUserFollowModel(wechatDbConn),
+			ModelExternalUserFollowAttribute: model.NewTbExternalUserFollowAttributeModel(wechatDbConn),
+			ModelUserServiceQrcodeModel:      model.NewTbUserServiceQrcodeModel(wechatDbConn),
+			ModelUserServiceQrcodeConclusion: model.NewTbUserServiceQrcodeConclusionsModel(wechatDbConn),
 		}
 	})
 

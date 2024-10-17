@@ -56,9 +56,8 @@ Kafka:
   Processors: 8
   CommitInOrder: true
 
-# 数据库链接
+# 数据库链接  账号读zk
 WechatDb:
-  DataSource:
   Timeout: 1s
   ReadTimeout: 5s
   WriteTimeout: 5s
@@ -68,7 +67,7 @@ WechatDb:
   ConnMaxLifeTime: 60
   ConnMaxIdleTime: 60
 
-# 业务缓存
+# 缓存链接 账号读zk
 CacheRedis:
   Host:
   Pass:

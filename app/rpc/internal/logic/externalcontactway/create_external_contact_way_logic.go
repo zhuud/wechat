@@ -124,7 +124,7 @@ func (l *CreateExternalContactWayLogic) CreateExternalContactWay(in *wechat.Exte
 	}
 
 	// 调用企微配置客户联系「联系我」方式接口
-	resAdd, err := l.svcCtx.WeCom.WithCorp("yx").ContactWay.Add(l.ctx, options)
+	resAdd, err := l.svcCtx.WeCom.WithCorp(config.CropYx).ContactWay.Add(l.ctx, options)
 	if err != nil {
 		l.Logger.Error("ContactWay_Add_Err", err)
 		return nil, err
@@ -136,7 +136,7 @@ func (l *CreateExternalContactWayLogic) CreateExternalContactWay(in *wechat.Exte
 	}
 
 	// 本地结构化
-	userServiceQrcode := &model.UserServiceQrcode{
+	userServiceQrcode := &model.TbUserServiceQrcode{
 		ConfigId:      resAdd.ConfigID,
 		Type:          cast.ToInt64(in.Type),
 		Scene:         cast.ToInt64(in.Scene),

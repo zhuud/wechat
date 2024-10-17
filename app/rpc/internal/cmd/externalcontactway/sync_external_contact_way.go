@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"time"
 
+	"rpc/internal/config"
 	"rpc/internal/svc"
 	"rpc/model"
 
@@ -44,39 +45,35 @@ func (s *syncExternalContactWayCmd) Do(args []string) error {
 
 	getContactWayListFunc := func(source chan<- any) {
 
-		_ = retry.Do(func() error {
-			var err error
-			params := &contactWayRequest.RequestListContactWay{
-				Limit: 100,
+		var err error
+		params := &contactWayRequest.RequestListContactWay{
+			Limit: 100,
+		}
+
+		//频率控制添加
+		dur, lerr := s.svcCtx.WechatLimit.WaitAllow("external_contact_way", time.Hour*2)
+		if lerr != nil {
+			s.svcCtx.Alarm.SendLarkCtx(s.ctx, fmt.Sprintf("syncExternalUserCmd.batchGetExternal.WaitAllow dui:%d error: %v 需要重新处理后续数据", dur, lerr))
+		}
+
+		list := &contactWayResponse.ResponseListContactWay{}
+		list, err = s.svcCtx.WeCom.WithCorp(config.CropYx).ContactWay.List(ctx, params)
+		if err != nil {
+			s.Error(err)
+		}
+		for len(list.ContactWayIDs) > 0 {
+			for _, item := range list.ContactWayIDs {
+				source <- item.ConfigID
 			}
 
-			//频率控制添加
-			dur, lerr := s.svcCtx.WechatLimit.WaitAllow("external_contact_way", time.Hour*2)
-			if lerr != nil {
-				s.svcCtx.Alarm.SendLarkCtx(s.ctx, fmt.Sprintf("syncExternalUserCmd.batchGetExternal.WaitAllow dui:%d error: %v 需要重新处理后续数据", dur, lerr))
-			}
-
-			list := &contactWayResponse.ResponseListContactWay{}
-			list, err = s.svcCtx.WeCom.WithCorp("yx").ContactWay.List(ctx, params)
+			time.Sleep(1 * time.Second)
+			params.Limit = 100
+			params.Cursor = list.NextCursor
+			list, err = s.svcCtx.WeCom.WithCorp(config.CropYx).ContactWay.List(ctx, params)
 			if err != nil {
 				s.Error(err)
-				return err
 			}
-			for len(list.ContactWayIDs) > 0 {
-				for _, item := range list.ContactWayIDs {
-					source <- item.ConfigID
-				}
-
-				time.Sleep(1 * time.Second)
-				params.Limit = 100
-				params.Cursor = list.NextCursor
-				list, err = s.svcCtx.WeCom.WithCorp("yx").ContactWay.List(ctx, params)
-				if err != nil {
-					s.Error(err)
-				}
-			}
-			return nil
-		})
+		}
 	}
 
 	getContactWayInfoFunc := func(item any) any {
@@ -128,7 +125,7 @@ func (s *syncExternalContactWayCmd) saveContactWayInfo(ctx context.Context, conf
 		userList, _ := json.Marshal(configData.ContactWay.User)
 		partyList, _ := json.Marshal(configData.ContactWay.Party)
 
-		userServiceQrcodeData := &model.UserServiceQrcode{
+		userServiceQrcodeData := &model.TbUserServiceQrcode{
 			ConfigId:      configData.ContactWay.ConfigID,
 			Type:          int64(configData.ContactWay.Type),
 			Scene:         int64(configData.ContactWay.Scene),
@@ -165,7 +162,7 @@ func (s *syncExternalContactWayCmd) saveContactWayInfo(ctx context.Context, conf
 // 获取详细信息
 func (s *syncExternalContactWayCmd) getContactWayInfo(ctx context.Context, configId string) (configData *contactWayResponse.ResponseGetContactWay, err error) {
 	err = retry.Do(func() error {
-		configData, err = s.svcCtx.WeCom.WithCorp("yx").ContactWay.Get(context.Background(), configId)
+		configData, err = s.svcCtx.WeCom.WithCorp(config.CropYx).ContactWay.Get(context.Background(), configId)
 		return nil
 	})
 
@@ -177,7 +174,7 @@ func (s *syncExternalContactWayCmd) getContactWayList(ctx context.Context, param
 
 	err = retry.Do(func() error {
 		list := &contactWayResponse.ResponseListContactWay{}
-		list, err = s.svcCtx.WeCom.WithCorp("yx").ContactWay.List(ctx, params)
+		list, err = s.svcCtx.WeCom.WithCorp(config.CropYx).ContactWay.List(ctx, params)
 		if err != nil {
 			s.Error(err)
 			return err
@@ -189,7 +186,7 @@ func (s *syncExternalContactWayCmd) getContactWayList(ctx context.Context, param
 
 			params.Limit = 100
 			params.Cursor = list.NextCursor
-			list, err = s.svcCtx.WeCom.WithCorp("yx").ContactWay.List(ctx, params)
+			list, err = s.svcCtx.WeCom.WithCorp(config.CropYx).ContactWay.List(ctx, params)
 			if err != nil {
 				s.Error(err)
 			}
@@ -205,7 +202,7 @@ func (s *syncExternalContactWayCmd) ContactWayTask(params *contactWayRequest.Req
 	list := &contactWayResponse.ResponseListContactWay{}
 
 	limiter.Wait(s.ctx)
-	list, err = s.svcCtx.WeCom.WithCorp("yx").ContactWay.List(context.Background(), params)
+	list, err = s.svcCtx.WeCom.WithCorp(config.CropYx).ContactWay.List(context.Background(), params)
 	if err != nil {
 		s.Error(err)
 		return err
@@ -216,7 +213,7 @@ func (s *syncExternalContactWayCmd) ContactWayTask(params *contactWayRequest.Req
 			configId := item.ConfigID
 
 			limiter.Wait(s.ctx)
-			configData, err := s.svcCtx.WeCom.WithCorp("yx").ContactWay.Get(context.Background(), configId)
+			configData, err := s.svcCtx.WeCom.WithCorp(config.CropYx).ContactWay.Get(context.Background(), configId)
 			if err != nil || configData.ContactWay == nil {
 				s.Error(err)
 				continue
@@ -236,7 +233,7 @@ func (s *syncExternalContactWayCmd) ContactWayTask(params *contactWayRequest.Req
 			userList, _ := json.Marshal(configData.ContactWay.User)
 			partyList, _ := json.Marshal(configData.ContactWay.Party)
 
-			userServiceQrcodeData := &model.UserServiceQrcode{
+			userServiceQrcodeData := &model.TbUserServiceQrcode{
 				ConfigId:      configId,
 				Type:          int64(configData.ContactWay.Type),
 				Scene:         int64(configData.ContactWay.Scene),
@@ -270,7 +267,7 @@ func (s *syncExternalContactWayCmd) ContactWayTask(params *contactWayRequest.Req
 
 		params.Limit = 100
 		params.Cursor = list.NextCursor
-		list, err = s.svcCtx.WeCom.WithCorp("yx").ContactWay.List(context.Background(), params)
+		list, err = s.svcCtx.WeCom.WithCorp(config.CropYx).ContactWay.List(context.Background(), params)
 		if err != nil {
 			s.Error(err)
 		}

@@ -27,8 +27,11 @@ func MustLoad() Config {
 		log.Fatalf("config.MustLoad error: %s", err.Error())
 	}
 
-	if len(c.WechatDb.DataSource) == 0 {
-		c.WechatDb.DataSource = mustLoadMysql(c, "db_wechat")
+	if len(c.WechatDb.WechatDataSource) == 0 {
+		c.WechatDb.WechatDataSource = mustLoadMysql(c, "db_wechat")
+	}
+	if len(c.WechatDb.BizUserDataSource) == 0 {
+		c.WechatDb.WechatDataSource = mustLoadMysql(c, "db_passport")
 	}
 
 	if len(c.CacheRedis.Host) == 0 {

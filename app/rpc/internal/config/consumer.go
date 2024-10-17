@@ -1,7 +1,8 @@
 package config
 
 const (
-	MqTagQywxSyncUserCallback = `5002`
+	MqTagQywxSyncUserCallback  = `79004`
+	MqTagQywxSyncStaffCallback = `79005`
 )
 
 const (

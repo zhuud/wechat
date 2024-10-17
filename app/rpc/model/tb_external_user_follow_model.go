@@ -3,19 +3,23 @@ package model
 import (
 	"context"
 	"errors"
+
 	"github.com/Masterminds/squirrel"
-	"github.com/zeromicro/go-zero/core/stores/cache"
 	"github.com/zeromicro/go-zero/core/stores/sqlc"
 	"github.com/zeromicro/go-zero/core/stores/sqlx"
+)
+
+const (
+	TbExternalUserFollowNormalStatus = 1
 )
 
 var _ TbExternalUserFollowModel = (*customTbExternalUserFollowModel)(nil)
 
 const (
-	DelStatus             = 0 //互相删除
-	NormalStatus          = 1 //正常
-	ExternalUserDelStatus = 2 //用户删除
-	StaffDelStatus        = 3 //客服删除
+	DelStatus            = 0 //互相删除
+	NormalStatus         = 1 //正常
+	FollowUserDelCStatus = 2 //客服删除用户
+	CDelFollowUserStatus = 3 //用户删除客服
 )
 
 type (
@@ -33,9 +37,9 @@ type (
 )
 
 // NewTbExternalUserFollowModel returns a model for the database table.
-func NewTbExternalUserFollowModel(conn sqlx.SqlConn, c cache.CacheConf, opts ...cache.Option) TbExternalUserFollowModel {
+func NewTbExternalUserFollowModel(conn sqlx.SqlConn) TbExternalUserFollowModel {
 	return &customTbExternalUserFollowModel{
-		defaultTbExternalUserFollowModel: newTbExternalUserFollowModel(conn, c, opts...),
+		defaultTbExternalUserFollowModel: newTbExternalUserFollowModel(conn),
 	}
 }
 
@@ -54,7 +58,7 @@ func (m *defaultTbExternalUserFollowModel) FindListByExternalUserId(ctx context.
 		return resp, err
 	}
 
-	err = m.QueryRowsNoCacheCtx(ctx, &resp, sql, args...)
+	err = m.conn.QueryRowsCtx(ctx, &resp, sql, args...)
 
 	return resp, err
 }
@@ -69,14 +73,14 @@ func (m *defaultTbExternalUserFollowModel) FindOneByExternalUserIdAndUserId(ctx 
 	sql, args, err := squirrel.Select(tbExternalUserFollowRows).From(m.table).Where(squirrel.Eq{
 		"external_userid": externalUserid,
 		"userid":          userid,
-		"platform":        crop,
+		"crop":            crop,
 		"status":          1,
 	}).ToSql()
 	if err != nil {
 		return nil, err
 	}
 
-	err = m.QueryRowNoCacheCtx(ctx, &resp, sql, args...)
+	err = m.conn.QueryRowCtx(ctx, &resp, sql, args...)
 	switch {
 	case err == nil:
 		return &resp, nil
