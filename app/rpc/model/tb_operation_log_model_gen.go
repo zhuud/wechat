@@ -10,8 +10,6 @@ import (
 	"time"
 
 	"github.com/zeromicro/go-zero/core/stores/builder"
-	"github.com/zeromicro/go-zero/core/stores/cache"
-	"github.com/zeromicro/go-zero/core/stores/sqlc"
 	"github.com/zeromicro/go-zero/core/stores/sqlx"
 	"github.com/zeromicro/go-zero/core/stringx"
 )
@@ -21,8 +19,6 @@ var (
 	tbOperationLogRows                = strings.Join(tbOperationLogFieldNames, ",")
 	tbOperationLogRowsExpectAutoSet   = strings.Join(stringx.Remove(tbOperationLogFieldNames, "`id`", "`create_at`", "`create_time`", "`created_at`", "`update_at`", "`update_time`", "`updated_at`"), ",")
 	tbOperationLogRowsWithPlaceHolder = strings.Join(stringx.Remove(tbOperationLogFieldNames, "`id`", "`create_at`", "`create_time`", "`created_at`", "`update_at`", "`update_time`", "`updated_at`"), "=?,") + "=?"
-
-	cacheTbOperationLogIdPrefix = "cache:tbOperationLog:id:"
 )
 
 type (
@@ -34,7 +30,7 @@ type (
 	}
 
 	defaultTbOperationLogModel struct {
-		sqlc.CachedConn
+		conn  sqlx.SqlConn
 		table string
 	}
 
@@ -43,40 +39,34 @@ type (
 		RelatedId  int64          `db:"related_id"`  // 关联表的id |柴利瑶 | 2020-06-15
 		AdminId    int64          `db:"admin_id"`    // 操作人id | 柴利瑶 | 2020-05-15
 		Type       int64          `db:"type"`        // 操作类型 | 柴利瑶 | 2020-05-15
+		LogType    int64          `db:"log_type"`    // 日志详情的类型 | 柴利瑶 | 2020-05-15
 		LogDesc    sql.NullString `db:"log_desc"`    // 日志内容 | 柴利瑶 |2020-05-15
 		UpdateTime time.Time      `db:"update_time"` // 更新时间
 		CreateTime time.Time      `db:"create_time"` // 创建时间
-		LogType    int64          `db:"log_type"`    // 日志详情的类型 | 柴利瑶 | 2020-05-15
 	}
 )
 
-func newTbOperationLogModel(conn sqlx.SqlConn, c cache.CacheConf, opts ...cache.Option) *defaultTbOperationLogModel {
+func newTbOperationLogModel(conn sqlx.SqlConn) *defaultTbOperationLogModel {
 	return &defaultTbOperationLogModel{
-		CachedConn: sqlc.NewConn(conn, c, opts...),
-		table:      "`tb_operation_log`",
+		conn:  conn,
+		table: "`tb_operation_log`",
 	}
 }
 
 func (m *defaultTbOperationLogModel) Delete(ctx context.Context, id int64) error {
-	tbOperationLogIdKey := fmt.Sprintf("%s%v", cacheTbOperationLogIdPrefix, id)
-	_, err := m.ExecCtx(ctx, func(ctx context.Context, conn sqlx.SqlConn) (result sql.Result, err error) {
-		query := fmt.Sprintf("delete from %s where `id` = ?", m.table)
-		return conn.ExecCtx(ctx, query, id)
-	}, tbOperationLogIdKey)
+	query := fmt.Sprintf("delete from %s where `id` = ?", m.table)
+	_, err := m.conn.ExecCtx(ctx, query, id)
 	return err
 }
 
 func (m *defaultTbOperationLogModel) FindOne(ctx context.Context, id int64) (*TbOperationLog, error) {
-	tbOperationLogIdKey := fmt.Sprintf("%s%v", cacheTbOperationLogIdPrefix, id)
+	query := fmt.Sprintf("select %s from %s where `id` = ? limit 1", tbOperationLogRows, m.table)
 	var resp TbOperationLog
-	err := m.QueryRowCtx(ctx, &resp, tbOperationLogIdKey, func(ctx context.Context, conn sqlx.SqlConn, v any) error {
-		query := fmt.Sprintf("select %s from %s where `id` = ? limit 1", tbOperationLogRows, m.table)
-		return conn.QueryRowCtx(ctx, v, query, id)
-	})
+	err := m.conn.QueryRowCtx(ctx, &resp, query, id)
 	switch err {
 	case nil:
 		return &resp, nil
-	case sqlc.ErrNotFound:
+	case sqlx.ErrNotFound:
 		return nil, ErrNotFound
 	default:
 		return nil, err
@@ -84,30 +74,15 @@ func (m *defaultTbOperationLogModel) FindOne(ctx context.Context, id int64) (*Tb
 }
 
 func (m *defaultTbOperationLogModel) Insert(ctx context.Context, data *TbOperationLog) (sql.Result, error) {
-	tbOperationLogIdKey := fmt.Sprintf("%s%v", cacheTbOperationLogIdPrefix, data.Id)
-	ret, err := m.ExecCtx(ctx, func(ctx context.Context, conn sqlx.SqlConn) (result sql.Result, err error) {
-		query := fmt.Sprintf("insert into %s (%s) values (?, ?, ?, ?, ?)", m.table, tbOperationLogRowsExpectAutoSet)
-		return conn.ExecCtx(ctx, query, data.RelatedId, data.AdminId, data.Type, data.LogDesc, data.LogType)
-	}, tbOperationLogIdKey)
+	query := fmt.Sprintf("insert into %s (%s) values (?, ?, ?, ?, ?)", m.table, tbOperationLogRowsExpectAutoSet)
+	ret, err := m.conn.ExecCtx(ctx, query, data.RelatedId, data.AdminId, data.Type, data.LogType, data.LogDesc)
 	return ret, err
 }
 
 func (m *defaultTbOperationLogModel) Update(ctx context.Context, data *TbOperationLog) error {
-	tbOperationLogIdKey := fmt.Sprintf("%s%v", cacheTbOperationLogIdPrefix, data.Id)
-	_, err := m.ExecCtx(ctx, func(ctx context.Context, conn sqlx.SqlConn) (result sql.Result, err error) {
-		query := fmt.Sprintf("update %s set %s where `id` = ?", m.table, tbOperationLogRowsWithPlaceHolder)
-		return conn.ExecCtx(ctx, query, data.RelatedId, data.AdminId, data.Type, data.LogDesc, data.LogType, data.Id)
-	}, tbOperationLogIdKey)
+	query := fmt.Sprintf("update %s set %s where `id` = ?", m.table, tbOperationLogRowsWithPlaceHolder)
+	_, err := m.conn.ExecCtx(ctx, query, data.RelatedId, data.AdminId, data.Type, data.LogType, data.LogDesc, data.Id)
 	return err
-}
-
-func (m *defaultTbOperationLogModel) formatPrimary(primary any) string {
-	return fmt.Sprintf("%s%v", cacheTbOperationLogIdPrefix, primary)
-}
-
-func (m *defaultTbOperationLogModel) queryPrimary(ctx context.Context, conn sqlx.SqlConn, v, primary any) error {
-	query := fmt.Sprintf("select %s from %s where `id` = ? limit 1", tbOperationLogRows, m.table)
-	return conn.QueryRowCtx(ctx, v, query, primary)
 }
 
 func (m *defaultTbOperationLogModel) tableName() string {

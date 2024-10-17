@@ -1,9 +1,7 @@
 Name: wechat-rpc
 ListenOn: 0.0.0.0:9527
-Mode: dev
-MaxConns: 10000
+Mode: prod
 Timeout: 3000 # ms
-CpuThreshold: 900 # 降载阈值 默认900(90%) 可允许设置范围0到1000
 
 # 是否开启健康检查
 Health: true
@@ -12,7 +10,7 @@ ZkAddr:
   - 10.10.10.10:2181
 DevServer:
   Enabled: true
-  Port: 6062 # 开发环境没用容器的话api rpc相同端口会冲突
+  Port: 6060
   HealthPath: "/healthz"
   EnableMetrics: true
   MetricsPath: "/metrics"
@@ -27,7 +25,7 @@ Log:
   Compress: false # 是否压缩日志
   StackCooldownMillis: 1000   # 堆栈打印冷却时间
   Mode: file
-  Path: ../../deploy/log/rpc
+  Path: /www/site/logs/wechatrpc
   KeepDays: 180
   Rotation: daily
 Alarm:
@@ -56,9 +54,8 @@ Kafka:
   Processors: 8
   CommitInOrder: true
 
-# 数据库链接
+# 数据库链接  账号读zk
 WechatDb:
-  DataSource:
   Timeout: 1s
   ReadTimeout: 5s
   WriteTimeout: 5s
@@ -68,11 +65,7 @@ WechatDb:
   ConnMaxLifeTime: 60
   ConnMaxIdleTime: 60
 
-# 业务缓存
-CacheRedis:
-  Host:
-  Pass:
-  Type: node
+# 缓存链接 账号读zk
 
 # 链路追踪
 Telemetry:

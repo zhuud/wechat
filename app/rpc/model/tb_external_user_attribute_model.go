@@ -3,8 +3,8 @@ package model
 import (
 	"context"
 	"errors"
+
 	"github.com/Masterminds/squirrel"
-	"github.com/zeromicro/go-zero/core/stores/cache"
 	"github.com/zeromicro/go-zero/core/stores/sqlx"
 )
 
@@ -33,9 +33,9 @@ type (
 )
 
 // NewTbExternalUserAttributeModel returns a model for the database table.
-func NewTbExternalUserAttributeModel(conn sqlx.SqlConn, c cache.CacheConf, opts ...cache.Option) TbExternalUserAttributeModel {
+func NewTbExternalUserAttributeModel(conn sqlx.SqlConn) TbExternalUserAttributeModel {
 	return &customTbExternalUserAttributeModel{
-		defaultTbExternalUserAttributeModel: newTbExternalUserAttributeModel(conn, c, opts...),
+		defaultTbExternalUserAttributeModel: newTbExternalUserAttributeModel(conn),
 	}
 }
 
@@ -52,7 +52,7 @@ func (m *defaultTbExternalUserAttributeModel) DeleteByExternalUserId(ctx context
 	if err != nil {
 		return err
 	}
-	_, err = m.ExecNoCacheCtx(ctx, sql, args...)
+	_, err = m.conn.ExecCtx(ctx, sql, args...)
 
 	return err
 }
@@ -71,7 +71,7 @@ func (m *defaultTbExternalUserAttributeModel) FindListByExternalUserid(ctx conte
 		return resp, err
 	}
 
-	err = m.QueryRowsNoCacheCtx(ctx, &resp, sql, args...)
+	err = m.conn.QueryRowsCtx(ctx, &resp, sql, args...)
 
 	return resp, err
 }

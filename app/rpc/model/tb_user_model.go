@@ -1,7 +1,6 @@
 package model
 
 import (
-	"github.com/zeromicro/go-zero/core/stores/cache"
 	"github.com/zeromicro/go-zero/core/stores/sqlx"
 )
 
@@ -20,8 +19,8 @@ type (
 )
 
 // NewTbUserModel returns a model for the database table.
-func NewTbUserModel(conn sqlx.SqlConn, c cache.CacheConf, opts ...cache.Option) TbUserModel {
+func NewTbUserModel(conn sqlx.SqlConn) TbUserModel {
 	return &customTbUserModel{
-		defaultTbUserModel: newTbUserModel(conn, c, opts...),
+		defaultTbUserModel: newTbUserModel(conn),
 	}
 }

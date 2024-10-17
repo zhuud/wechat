@@ -134,7 +134,7 @@ func (l *UpdateExternalContactWayLogic) UpdateExternalContactWay(in *wechat.Exte
 	}
 
 	if qrcodeInfo != nil {
-		updateUserServiceQrcode := &model.UserServiceQrcode{
+		updateUserServiceQrcode := &model.TbUserServiceQrcode{
 			ConfigId:      in.ConfigId,
 			Type:          qrcodeInfo.Type,
 			Scene:         qrcodeInfo.Scene,

@@ -10,8 +10,6 @@ import (
 	"time"
 
 	"github.com/zeromicro/go-zero/core/stores/builder"
-	"github.com/zeromicro/go-zero/core/stores/cache"
-	"github.com/zeromicro/go-zero/core/stores/sqlc"
 	"github.com/zeromicro/go-zero/core/stores/sqlx"
 	"github.com/zeromicro/go-zero/core/stringx"
 )
@@ -21,8 +19,6 @@ var (
 	tbExternalUserFollowAttributeRows                = strings.Join(tbExternalUserFollowAttributeFieldNames, ",")
 	tbExternalUserFollowAttributeRowsExpectAutoSet   = strings.Join(stringx.Remove(tbExternalUserFollowAttributeFieldNames, "`seq`", "`create_at`", "`create_time`", "`created_at`", "`update_at`", "`update_time`", "`updated_at`"), ",")
 	tbExternalUserFollowAttributeRowsWithPlaceHolder = strings.Join(stringx.Remove(tbExternalUserFollowAttributeFieldNames, "`seq`", "`create_at`", "`create_time`", "`created_at`", "`update_at`", "`update_time`", "`updated_at`"), "=?,") + "=?"
-
-	cacheTbExternalUserFollowAttributeSeqPrefix = "cache:tbExternalUserFollowAttribute:seq:"
 )
 
 type (
@@ -34,7 +30,7 @@ type (
 	}
 
 	defaultTbExternalUserFollowAttributeModel struct {
-		sqlc.CachedConn
+		conn  sqlx.SqlConn
 		table string
 	}
 
@@ -43,7 +39,6 @@ type (
 		ExternalUserid string    `db:"external_userid"` // 外部联系人的userid | 2020-09-10
 		Userid         string    `db:"userid"`          // 联系人的userid | 2020-09-10
 		Crop           string    `db:"crop"`            // 企微平台(多企微情况) | 2020-09-10
-		Platform       string    `db:"platform"`        // 企微平台(多企微情况) | 2020-09-10
 		AttributeType  int64     `db:"attribute_type"`  // 类型 1:备注标签 / 2:视频号信息 | 2020-09-10
 		AttributeValue string    `db:"attribute_value"` // 类型值 | 2020-09-10
 		Extension      string    `db:"extension"`       // 扩展信息 | 2020-09-10
@@ -53,33 +48,27 @@ type (
 	}
 )
 
-func newTbExternalUserFollowAttributeModel(conn sqlx.SqlConn, c cache.CacheConf, opts ...cache.Option) *defaultTbExternalUserFollowAttributeModel {
+func newTbExternalUserFollowAttributeModel(conn sqlx.SqlConn) *defaultTbExternalUserFollowAttributeModel {
 	return &defaultTbExternalUserFollowAttributeModel{
-		CachedConn: sqlc.NewConn(conn, c, opts...),
-		table:      "`tb_external_user_follow_attribute`",
+		conn:  conn,
+		table: "`tb_external_user_follow_attribute`",
 	}
 }
 
 func (m *defaultTbExternalUserFollowAttributeModel) Delete(ctx context.Context, seq int64) error {
-	tbExternalUserFollowAttributeSeqKey := fmt.Sprintf("%s%v", cacheTbExternalUserFollowAttributeSeqPrefix, seq)
-	_, err := m.ExecCtx(ctx, func(ctx context.Context, conn sqlx.SqlConn) (result sql.Result, err error) {
-		query := fmt.Sprintf("delete from %s where `seq` = ?", m.table)
-		return conn.ExecCtx(ctx, query, seq)
-	}, tbExternalUserFollowAttributeSeqKey)
+	query := fmt.Sprintf("delete from %s where `seq` = ?", m.table)
+	_, err := m.conn.ExecCtx(ctx, query, seq)
 	return err
 }
 
 func (m *defaultTbExternalUserFollowAttributeModel) FindOne(ctx context.Context, seq int64) (*TbExternalUserFollowAttribute, error) {
-	tbExternalUserFollowAttributeSeqKey := fmt.Sprintf("%s%v", cacheTbExternalUserFollowAttributeSeqPrefix, seq)
+	query := fmt.Sprintf("select %s from %s where `seq` = ? limit 1", tbExternalUserFollowAttributeRows, m.table)
 	var resp TbExternalUserFollowAttribute
-	err := m.QueryRowCtx(ctx, &resp, tbExternalUserFollowAttributeSeqKey, func(ctx context.Context, conn sqlx.SqlConn, v any) error {
-		query := fmt.Sprintf("select %s from %s where `seq` = ? limit 1", tbExternalUserFollowAttributeRows, m.table)
-		return conn.QueryRowCtx(ctx, v, query, seq)
-	})
+	err := m.conn.QueryRowCtx(ctx, &resp, query, seq)
 	switch err {
 	case nil:
 		return &resp, nil
-	case sqlc.ErrNotFound:
+	case sqlx.ErrNotFound:
 		return nil, ErrNotFound
 	default:
 		return nil, err
@@ -87,30 +76,15 @@ func (m *defaultTbExternalUserFollowAttributeModel) FindOne(ctx context.Context,
 }
 
 func (m *defaultTbExternalUserFollowAttributeModel) Insert(ctx context.Context, data *TbExternalUserFollowAttribute) (sql.Result, error) {
-	tbExternalUserFollowAttributeSeqKey := fmt.Sprintf("%s%v", cacheTbExternalUserFollowAttributeSeqPrefix, data.Seq)
-	ret, err := m.ExecCtx(ctx, func(ctx context.Context, conn sqlx.SqlConn) (result sql.Result, err error) {
-		query := fmt.Sprintf("insert into %s (%s) values (?, ?, ?, ?, ?, ?, ?)", m.table, tbExternalUserFollowAttributeRowsExpectAutoSet)
-		return conn.ExecCtx(ctx, query, data.ExternalUserid, data.Userid, data.Crop, data.AttributeType, data.AttributeValue, data.Extension, data.Status)
-	}, tbExternalUserFollowAttributeSeqKey)
+	query := fmt.Sprintf("insert into %s (%s) values (?, ?, ?, ?, ?, ?, ?)", m.table, tbExternalUserFollowAttributeRowsExpectAutoSet)
+	ret, err := m.conn.ExecCtx(ctx, query, data.ExternalUserid, data.Userid, data.Crop, data.AttributeType, data.AttributeValue, data.Extension, data.Status)
 	return ret, err
 }
 
 func (m *defaultTbExternalUserFollowAttributeModel) Update(ctx context.Context, data *TbExternalUserFollowAttribute) error {
-	tbExternalUserFollowAttributeSeqKey := fmt.Sprintf("%s%v", cacheTbExternalUserFollowAttributeSeqPrefix, data.Seq)
-	_, err := m.ExecCtx(ctx, func(ctx context.Context, conn sqlx.SqlConn) (result sql.Result, err error) {
-		query := fmt.Sprintf("update %s set %s where `seq` = ?", m.table, tbExternalUserFollowAttributeRowsWithPlaceHolder)
-		return conn.ExecCtx(ctx, query, data.ExternalUserid, data.Userid, data.Crop, data.AttributeType, data.AttributeValue, data.Extension, data.Status, data.Seq)
-	}, tbExternalUserFollowAttributeSeqKey)
+	query := fmt.Sprintf("update %s set %s where `seq` = ?", m.table, tbExternalUserFollowAttributeRowsWithPlaceHolder)
+	_, err := m.conn.ExecCtx(ctx, query, data.ExternalUserid, data.Userid, data.Crop, data.AttributeType, data.AttributeValue, data.Extension, data.Status, data.Seq)
 	return err
-}
-
-func (m *defaultTbExternalUserFollowAttributeModel) formatPrimary(primary any) string {
-	return fmt.Sprintf("%s%v", cacheTbExternalUserFollowAttributeSeqPrefix, primary)
-}
-
-func (m *defaultTbExternalUserFollowAttributeModel) queryPrimary(ctx context.Context, conn sqlx.SqlConn, v, primary any) error {
-	query := fmt.Sprintf("select %s from %s where `seq` = ? limit 1", tbExternalUserFollowAttributeRows, m.table)
-	return conn.QueryRowCtx(ctx, v, query, primary)
 }
 
 func (m *defaultTbExternalUserFollowAttributeModel) tableName() string {

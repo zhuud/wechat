@@ -132,7 +132,7 @@ func (l *CreateExternalContactWayLogic) CreateExternalContactWay(in *wechat.Exte
 	}
 
 	// 本地结构化
-	userServiceQrcode := &model.UserServiceQrcode{
+	userServiceQrcode := &model.TbUserServiceQrcode{
 		ConfigId:      resAdd.ConfigID,
 		Type:          cast.ToInt64(in.Type),
 		Scene:         cast.ToInt64(in.Scene),

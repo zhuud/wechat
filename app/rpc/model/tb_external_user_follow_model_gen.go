@@ -10,8 +10,6 @@ import (
 	"time"
 
 	"github.com/zeromicro/go-zero/core/stores/builder"
-	"github.com/zeromicro/go-zero/core/stores/cache"
-	"github.com/zeromicro/go-zero/core/stores/sqlc"
 	"github.com/zeromicro/go-zero/core/stores/sqlx"
 	"github.com/zeromicro/go-zero/core/stringx"
 )
@@ -21,8 +19,6 @@ var (
 	tbExternalUserFollowRows                = strings.Join(tbExternalUserFollowFieldNames, ",")
 	tbExternalUserFollowRowsExpectAutoSet   = strings.Join(stringx.Remove(tbExternalUserFollowFieldNames, "`seq`", "`create_at`", "`create_time`", "`created_at`", "`update_at`", "`update_time`", "`updated_at`"), ",")
 	tbExternalUserFollowRowsWithPlaceHolder = strings.Join(stringx.Remove(tbExternalUserFollowFieldNames, "`seq`", "`create_at`", "`create_time`", "`created_at`", "`update_at`", "`update_time`", "`updated_at`"), "=?,") + "=?"
-
-	cacheTbExternalUserFollowSeqPrefix = "cache:tbExternalUserFollow:seq:"
 )
 
 type (
@@ -34,7 +30,7 @@ type (
 	}
 
 	defaultTbExternalUserFollowModel struct {
-		sqlc.CachedConn
+		conn  sqlx.SqlConn
 		table string
 	}
 
@@ -62,33 +58,27 @@ type (
 	}
 )
 
-func newTbExternalUserFollowModel(conn sqlx.SqlConn, c cache.CacheConf, opts ...cache.Option) *defaultTbExternalUserFollowModel {
+func newTbExternalUserFollowModel(conn sqlx.SqlConn) *defaultTbExternalUserFollowModel {
 	return &defaultTbExternalUserFollowModel{
-		CachedConn: sqlc.NewConn(conn, c, opts...),
-		table:      "`tb_external_user_follow`",
+		conn:  conn,
+		table: "`tb_external_user_follow`",
 	}
 }
 
 func (m *defaultTbExternalUserFollowModel) Delete(ctx context.Context, seq int64) error {
-	tbExternalUserFollowSeqKey := fmt.Sprintf("%s%v", cacheTbExternalUserFollowSeqPrefix, seq)
-	_, err := m.ExecCtx(ctx, func(ctx context.Context, conn sqlx.SqlConn) (result sql.Result, err error) {
-		query := fmt.Sprintf("delete from %s where `seq` = ?", m.table)
-		return conn.ExecCtx(ctx, query, seq)
-	}, tbExternalUserFollowSeqKey)
+	query := fmt.Sprintf("delete from %s where `seq` = ?", m.table)
+	_, err := m.conn.ExecCtx(ctx, query, seq)
 	return err
 }
 
 func (m *defaultTbExternalUserFollowModel) FindOne(ctx context.Context, seq int64) (*TbExternalUserFollow, error) {
-	tbExternalUserFollowSeqKey := fmt.Sprintf("%s%v", cacheTbExternalUserFollowSeqPrefix, seq)
+	query := fmt.Sprintf("select %s from %s where `seq` = ? limit 1", tbExternalUserFollowRows, m.table)
 	var resp TbExternalUserFollow
-	err := m.QueryRowCtx(ctx, &resp, tbExternalUserFollowSeqKey, func(ctx context.Context, conn sqlx.SqlConn, v any) error {
-		query := fmt.Sprintf("select %s from %s where `seq` = ? limit 1", tbExternalUserFollowRows, m.table)
-		return conn.QueryRowCtx(ctx, v, query, seq)
-	})
+	err := m.conn.QueryRowCtx(ctx, &resp, query, seq)
 	switch err {
 	case nil:
 		return &resp, nil
-	case sqlc.ErrNotFound:
+	case sqlx.ErrNotFound:
 		return nil, ErrNotFound
 	default:
 		return nil, err
@@ -96,30 +86,15 @@ func (m *defaultTbExternalUserFollowModel) FindOne(ctx context.Context, seq int6
 }
 
 func (m *defaultTbExternalUserFollowModel) Insert(ctx context.Context, data *TbExternalUserFollow) (sql.Result, error) {
-	tbExternalUserFollowSeqKey := fmt.Sprintf("%s%v", cacheTbExternalUserFollowSeqPrefix, data.Seq)
-	ret, err := m.ExecCtx(ctx, func(ctx context.Context, conn sqlx.SqlConn) (result sql.Result, err error) {
-		query := fmt.Sprintf("insert into %s (%s) values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", m.table, tbExternalUserFollowRowsExpectAutoSet)
-		return conn.ExecCtx(ctx, query, data.ExternalUserid, data.Unionid, data.Userid, data.Crop, data.OperUserid, data.AddWay, data.State, data.StateChannel, data.StateChannelValue, data.Remark, data.RemarkMobiles, data.Description, data.RemarkCorpName, data.RemarkPicMediaid, data.Status)
-	}, tbExternalUserFollowSeqKey)
+	query := fmt.Sprintf("insert into %s (%s) values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", m.table, tbExternalUserFollowRowsExpectAutoSet)
+	ret, err := m.conn.ExecCtx(ctx, query, data.ExternalUserid, data.Unionid, data.Userid, data.Crop, data.OperUserid, data.AddWay, data.State, data.StateChannel, data.StateChannelValue, data.Remark, data.RemarkMobiles, data.Description, data.RemarkCorpName, data.RemarkPicMediaid, data.Status, data.ChatAgreeStatus, data.DeletedAt)
 	return ret, err
 }
 
 func (m *defaultTbExternalUserFollowModel) Update(ctx context.Context, data *TbExternalUserFollow) error {
-	tbExternalUserFollowSeqKey := fmt.Sprintf("%s%v", cacheTbExternalUserFollowSeqPrefix, data.Seq)
-	_, err := m.ExecCtx(ctx, func(ctx context.Context, conn sqlx.SqlConn) (result sql.Result, err error) {
-		query := fmt.Sprintf("update %s set %s where `seq` = ?", m.table, tbExternalUserFollowRowsWithPlaceHolder)
-		return conn.ExecCtx(ctx, query, data.ExternalUserid, data.Unionid, data.Userid, data.Crop, data.OperUserid, data.AddWay, data.State, data.StateChannel, data.StateChannelValue, data.Remark, data.RemarkMobiles, data.Description, data.RemarkCorpName, data.RemarkPicMediaid, data.Status, data.Seq)
-	}, tbExternalUserFollowSeqKey)
+	query := fmt.Sprintf("update %s set %s where `seq` = ?", m.table, tbExternalUserFollowRowsWithPlaceHolder)
+	_, err := m.conn.ExecCtx(ctx, query, data.ExternalUserid, data.Unionid, data.Userid, data.Crop, data.OperUserid, data.AddWay, data.State, data.StateChannel, data.StateChannelValue, data.Remark, data.RemarkMobiles, data.Description, data.RemarkCorpName, data.RemarkPicMediaid, data.Status, data.ChatAgreeStatus, data.DeletedAt, data.Seq)
 	return err
-}
-
-func (m *defaultTbExternalUserFollowModel) formatPrimary(primary any) string {
-	return fmt.Sprintf("%s%v", cacheTbExternalUserFollowSeqPrefix, primary)
-}
-
-func (m *defaultTbExternalUserFollowModel) queryPrimary(ctx context.Context, conn sqlx.SqlConn, v, primary any) error {
-	query := fmt.Sprintf("select %s from %s where `seq` = ? limit 1", tbExternalUserFollowRows, m.table)
-	return conn.QueryRowCtx(ctx, v, query, primary)
 }
 
 func (m *defaultTbExternalUserFollowModel) tableName() string {

@@ -10,8 +10,6 @@ import (
 	"time"
 
 	"github.com/zeromicro/go-zero/core/stores/builder"
-	"github.com/zeromicro/go-zero/core/stores/cache"
-	"github.com/zeromicro/go-zero/core/stores/sqlc"
 	"github.com/zeromicro/go-zero/core/stores/sqlx"
 	"github.com/zeromicro/go-zero/core/stringx"
 )
@@ -21,8 +19,6 @@ var (
 	tbUserRows                = strings.Join(tbUserFieldNames, ",")
 	tbUserRowsExpectAutoSet   = strings.Join(stringx.Remove(tbUserFieldNames, "`create_at`", "`create_time`", "`created_at`", "`update_at`", "`update_time`", "`updated_at`"), ",")
 	tbUserRowsWithPlaceHolder = strings.Join(stringx.Remove(tbUserFieldNames, "`userid`", "`create_at`", "`create_time`", "`created_at`", "`update_at`", "`update_time`", "`updated_at`"), "=?,") + "=?"
-
-	cacheTbUserUseridPrefix = "cache:tbUser:userid:"
 )
 
 type (
@@ -34,7 +30,7 @@ type (
 	}
 
 	defaultTbUserModel struct {
-		sqlc.CachedConn
+		conn  sqlx.SqlConn
 		table string
 	}
 
@@ -54,33 +50,27 @@ type (
 	}
 )
 
-func newTbUserModel(conn sqlx.SqlConn, c cache.CacheConf, opts ...cache.Option) *defaultTbUserModel {
+func newTbUserModel(conn sqlx.SqlConn) *defaultTbUserModel {
 	return &defaultTbUserModel{
-		CachedConn: sqlc.NewConn(conn, c, opts...),
-		table:      "`tb_user`",
+		conn:  conn,
+		table: "`tb_user`",
 	}
 }
 
 func (m *defaultTbUserModel) Delete(ctx context.Context, userid string) error {
-	tbUserUseridKey := fmt.Sprintf("%s%v", cacheTbUserUseridPrefix, userid)
-	_, err := m.ExecCtx(ctx, func(ctx context.Context, conn sqlx.SqlConn) (result sql.Result, err error) {
-		query := fmt.Sprintf("delete from %s where `userid` = ?", m.table)
-		return conn.ExecCtx(ctx, query, userid)
-	}, tbUserUseridKey)
+	query := fmt.Sprintf("delete from %s where `userid` = ?", m.table)
+	_, err := m.conn.ExecCtx(ctx, query, userid)
 	return err
 }
 
 func (m *defaultTbUserModel) FindOne(ctx context.Context, userid string) (*TbUser, error) {
-	tbUserUseridKey := fmt.Sprintf("%s%v", cacheTbUserUseridPrefix, userid)
+	query := fmt.Sprintf("select %s from %s where `userid` = ? limit 1", tbUserRows, m.table)
 	var resp TbUser
-	err := m.QueryRowCtx(ctx, &resp, tbUserUseridKey, func(ctx context.Context, conn sqlx.SqlConn, v any) error {
-		query := fmt.Sprintf("select %s from %s where `userid` = ? limit 1", tbUserRows, m.table)
-		return conn.QueryRowCtx(ctx, v, query, userid)
-	})
+	err := m.conn.QueryRowCtx(ctx, &resp, query, userid)
 	switch err {
 	case nil:
 		return &resp, nil
-	case sqlc.ErrNotFound:
+	case sqlx.ErrNotFound:
 		return nil, ErrNotFound
 	default:
 		return nil, err
@@ -88,30 +78,15 @@ func (m *defaultTbUserModel) FindOne(ctx context.Context, userid string) (*TbUse
 }
 
 func (m *defaultTbUserModel) Insert(ctx context.Context, data *TbUser) (sql.Result, error) {
-	tbUserUseridKey := fmt.Sprintf("%s%v", cacheTbUserUseridPrefix, data.Userid)
-	ret, err := m.ExecCtx(ctx, func(ctx context.Context, conn sqlx.SqlConn) (result sql.Result, err error) {
-		query := fmt.Sprintf("insert into %s (%s) values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", m.table, tbUserRowsExpectAutoSet)
-		return conn.ExecCtx(ctx, query, data.Userid, data.Unionid, data.Type, data.Name, data.Avatar, data.Gender, data.CorpName, data.CorpFullName, data.Position, data.Status)
-	}, tbUserUseridKey)
+	query := fmt.Sprintf("insert into %s (%s) values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", m.table, tbUserRowsExpectAutoSet)
+	ret, err := m.conn.ExecCtx(ctx, query, data.Userid, data.Unionid, data.Type, data.Name, data.Avatar, data.Gender, data.CorpName, data.CorpFullName, data.Position, data.Status)
 	return ret, err
 }
 
 func (m *defaultTbUserModel) Update(ctx context.Context, data *TbUser) error {
-	tbUserUseridKey := fmt.Sprintf("%s%v", cacheTbUserUseridPrefix, data.Userid)
-	_, err := m.ExecCtx(ctx, func(ctx context.Context, conn sqlx.SqlConn) (result sql.Result, err error) {
-		query := fmt.Sprintf("update %s set %s where `userid` = ?", m.table, tbUserRowsWithPlaceHolder)
-		return conn.ExecCtx(ctx, query, data.Unionid, data.Type, data.Name, data.Avatar, data.Gender, data.CorpName, data.CorpFullName, data.Position, data.Status, data.Userid)
-	}, tbUserUseridKey)
+	query := fmt.Sprintf("update %s set %s where `userid` = ?", m.table, tbUserRowsWithPlaceHolder)
+	_, err := m.conn.ExecCtx(ctx, query, data.Unionid, data.Type, data.Name, data.Avatar, data.Gender, data.CorpName, data.CorpFullName, data.Position, data.Status, data.Userid)
 	return err
-}
-
-func (m *defaultTbUserModel) formatPrimary(primary any) string {
-	return fmt.Sprintf("%s%v", cacheTbUserUseridPrefix, primary)
-}
-
-func (m *defaultTbUserModel) queryPrimary(ctx context.Context, conn sqlx.SqlConn, v, primary any) error {
-	query := fmt.Sprintf("select %s from %s where `userid` = ? limit 1", tbUserRows, m.table)
-	return conn.QueryRowCtx(ctx, v, query, primary)
 }
 
 func (m *defaultTbUserModel) tableName() string {

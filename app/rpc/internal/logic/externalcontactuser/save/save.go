@@ -4,17 +4,18 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/avast/retry-go"
-	jsoniter "github.com/json-iterator/go"
-	"github.com/zhuud/go-library/utils"
-	"reflect"
-	"rpc/internal/svc"
-	"rpc/model"
 	"strings"
 	"time"
 
+	"reflect"
+	"rpc/internal/svc"
+	"rpc/model"
+
 	"github.com/ArtisanCloud/PowerWeChat/v3/src/work/externalContact/response"
+	"github.com/avast/retry-go"
+	jsoniter "github.com/json-iterator/go"
 	"github.com/zeromicro/go-zero/core/logx"
+	"github.com/zhuud/go-library/utils"
 )
 
 type SaveExternalUserLogic struct {
@@ -41,10 +42,10 @@ func (s *SaveExternalUserLogic) Save(crop string, wechatExternalUser *response.R
 	externalUser := &model.TbExternalUser{
 		ExternalUserid: wechatExternalUser.ExternalContact.ExternalUserID,
 		Unionid:        wechatExternalUser.ExternalContact.UnionID,
-		Type:           uint64(wechatExternalUser.ExternalContact.Type),
+		Type:           int64(wechatExternalUser.ExternalContact.Type),
 		Name:           wechatExternalUser.ExternalContact.Name,
 		Avatar:         wechatExternalUser.ExternalContact.Avatar,
-		Gender:         uint64(wechatExternalUser.ExternalContact.Gender),
+		Gender:         int64(wechatExternalUser.ExternalContact.Gender),
 		CorpName:       wechatExternalUser.ExternalContact.CorpName,
 		CorpFullName:   wechatExternalUser.ExternalContact.CorpFullName,
 		Position:       wechatExternalUser.ExternalContact.Position,
@@ -73,7 +74,7 @@ func (s *SaveExternalUserLogic) Save(crop string, wechatExternalUser *response.R
 
 			externalUserAttrList = append(externalUserAttrList, &model.TbExternalUserAttribute{
 				ExternalUserid: wechatExternalUser.ExternalContact.ExternalUserID,
-				AttributeType:  uint64(item.Type),
+				AttributeType:  int64(item.Type),
 				AttributeValue: item.Name,
 				Extension:      ext,
 				Status:         model.TbExternalUserAttrNormalStatus,
@@ -99,7 +100,7 @@ func (s *SaveExternalUserLogic) Save(crop string, wechatExternalUser *response.R
 		Userid:            wechatExternalUser.FollowInfo.UserID,
 		Crop:              crop,
 		OperUserid:        wechatExternalUser.FollowInfo.OperUserID,
-		AddWay:            uint64(wechatExternalUser.FollowInfo.AddWay),
+		AddWay:            int64(wechatExternalUser.FollowInfo.AddWay),
 		State:             wechatExternalUser.FollowInfo.State,
 		StateChannel:      "",
 		StateChannelValue: "",
@@ -124,7 +125,6 @@ func (s *SaveExternalUserLogic) Save(crop string, wechatExternalUser *response.R
 			}
 		}
 	}
-
 	err = s.SaveExternalUserFollow(externalUserFollow)
 	if err != nil {
 		return errors.New(fmt.Sprintf("保存外部用户关系信息失败, error: %v", err))

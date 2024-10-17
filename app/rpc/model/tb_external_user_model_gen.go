@@ -10,8 +10,6 @@ import (
 	"time"
 
 	"github.com/zeromicro/go-zero/core/stores/builder"
-	"github.com/zeromicro/go-zero/core/stores/cache"
-	"github.com/zeromicro/go-zero/core/stores/sqlc"
 	"github.com/zeromicro/go-zero/core/stores/sqlx"
 	"github.com/zeromicro/go-zero/core/stringx"
 )
@@ -21,8 +19,6 @@ var (
 	tbExternalUserRows                = strings.Join(tbExternalUserFieldNames, ",")
 	tbExternalUserRowsExpectAutoSet   = strings.Join(stringx.Remove(tbExternalUserFieldNames, "`create_at`", "`create_time`", "`created_at`", "`update_at`", "`update_time`", "`updated_at`"), ",")
 	tbExternalUserRowsWithPlaceHolder = strings.Join(stringx.Remove(tbExternalUserFieldNames, "`external_userid`", "`create_at`", "`create_time`", "`created_at`", "`update_at`", "`update_time`", "`updated_at`"), "=?,") + "=?"
-
-	cacheTbExternalUserExternalUseridPrefix = "cache:tbExternalUser:externalUserid:"
 )
 
 type (
@@ -34,7 +30,7 @@ type (
 	}
 
 	defaultTbExternalUserModel struct {
-		sqlc.CachedConn
+		conn  sqlx.SqlConn
 		table string
 	}
 
@@ -54,33 +50,27 @@ type (
 	}
 )
 
-func newTbExternalUserModel(conn sqlx.SqlConn, c cache.CacheConf, opts ...cache.Option) *defaultTbExternalUserModel {
+func newTbExternalUserModel(conn sqlx.SqlConn) *defaultTbExternalUserModel {
 	return &defaultTbExternalUserModel{
-		CachedConn: sqlc.NewConn(conn, c, opts...),
-		table:      "`tb_external_user`",
+		conn:  conn,
+		table: "`tb_external_user`",
 	}
 }
 
 func (m *defaultTbExternalUserModel) Delete(ctx context.Context, externalUserid string) error {
-	tbExternalUserExternalUseridKey := fmt.Sprintf("%s%v", cacheTbExternalUserExternalUseridPrefix, externalUserid)
-	_, err := m.ExecCtx(ctx, func(ctx context.Context, conn sqlx.SqlConn) (result sql.Result, err error) {
-		query := fmt.Sprintf("delete from %s where `external_userid` = ?", m.table)
-		return conn.ExecCtx(ctx, query, externalUserid)
-	}, tbExternalUserExternalUseridKey)
+	query := fmt.Sprintf("delete from %s where `external_userid` = ?", m.table)
+	_, err := m.conn.ExecCtx(ctx, query, externalUserid)
 	return err
 }
 
 func (m *defaultTbExternalUserModel) FindOne(ctx context.Context, externalUserid string) (*TbExternalUser, error) {
-	tbExternalUserExternalUseridKey := fmt.Sprintf("%s%v", cacheTbExternalUserExternalUseridPrefix, externalUserid)
+	query := fmt.Sprintf("select %s from %s where `external_userid` = ? limit 1", tbExternalUserRows, m.table)
 	var resp TbExternalUser
-	err := m.QueryRowCtx(ctx, &resp, tbExternalUserExternalUseridKey, func(ctx context.Context, conn sqlx.SqlConn, v any) error {
-		query := fmt.Sprintf("select %s from %s where `external_userid` = ? limit 1", tbExternalUserRows, m.table)
-		return conn.QueryRowCtx(ctx, v, query, externalUserid)
-	})
+	err := m.conn.QueryRowCtx(ctx, &resp, query, externalUserid)
 	switch err {
 	case nil:
 		return &resp, nil
-	case sqlc.ErrNotFound:
+	case sqlx.ErrNotFound:
 		return nil, ErrNotFound
 	default:
 		return nil, err
@@ -88,30 +78,15 @@ func (m *defaultTbExternalUserModel) FindOne(ctx context.Context, externalUserid
 }
 
 func (m *defaultTbExternalUserModel) Insert(ctx context.Context, data *TbExternalUser) (sql.Result, error) {
-	tbExternalUserExternalUseridKey := fmt.Sprintf("%s%v", cacheTbExternalUserExternalUseridPrefix, data.ExternalUserid)
-	ret, err := m.ExecCtx(ctx, func(ctx context.Context, conn sqlx.SqlConn) (result sql.Result, err error) {
-		query := fmt.Sprintf("insert into %s (%s) values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", m.table, tbExternalUserRowsExpectAutoSet)
-		return conn.ExecCtx(ctx, query, data.ExternalUserid, data.Unionid, data.Type, data.Name, data.Avatar, data.Gender, data.CorpName, data.CorpFullName, data.Position, data.Status)
-	}, tbExternalUserExternalUseridKey)
+	query := fmt.Sprintf("insert into %s (%s) values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", m.table, tbExternalUserRowsExpectAutoSet)
+	ret, err := m.conn.ExecCtx(ctx, query, data.ExternalUserid, data.Unionid, data.Type, data.Name, data.Avatar, data.Gender, data.CorpName, data.CorpFullName, data.Position, data.Status)
 	return ret, err
 }
 
 func (m *defaultTbExternalUserModel) Update(ctx context.Context, data *TbExternalUser) error {
-	tbExternalUserExternalUseridKey := fmt.Sprintf("%s%v", cacheTbExternalUserExternalUseridPrefix, data.ExternalUserid)
-	_, err := m.ExecCtx(ctx, func(ctx context.Context, conn sqlx.SqlConn) (result sql.Result, err error) {
-		query := fmt.Sprintf("update %s set %s where `external_userid` = ?", m.table, tbExternalUserRowsWithPlaceHolder)
-		return conn.ExecCtx(ctx, query, data.Unionid, data.Type, data.Name, data.Avatar, data.Gender, data.CorpName, data.CorpFullName, data.Position, data.Status, data.ExternalUserid)
-	}, tbExternalUserExternalUseridKey)
+	query := fmt.Sprintf("update %s set %s where `external_userid` = ?", m.table, tbExternalUserRowsWithPlaceHolder)
+	_, err := m.conn.ExecCtx(ctx, query, data.Unionid, data.Type, data.Name, data.Avatar, data.Gender, data.CorpName, data.CorpFullName, data.Position, data.Status, data.ExternalUserid)
 	return err
-}
-
-func (m *defaultTbExternalUserModel) formatPrimary(primary any) string {
-	return fmt.Sprintf("%s%v", cacheTbExternalUserExternalUseridPrefix, primary)
-}
-
-func (m *defaultTbExternalUserModel) queryPrimary(ctx context.Context, conn sqlx.SqlConn, v, primary any) error {
-	query := fmt.Sprintf("select %s from %s where `external_userid` = ? limit 1", tbExternalUserRows, m.table)
-	return conn.QueryRowCtx(ctx, v, query, primary)
 }
 
 func (m *defaultTbExternalUserModel) tableName() string {

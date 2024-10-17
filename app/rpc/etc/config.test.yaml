@@ -24,6 +24,11 @@ Log:
   Path: /www/site/logs/wechatrpc
   KeepDays: 180
   Rotation: daily
+Alarm:
+  FSAppId: cli_a0b61445cf78d00c
+  FsAppSecret: fuJ4u8qVYubqh1ltdbxJOgGluDX1v1Ah
+  FsReceiveIdType: chat_id
+  FsReceiveId: oc_060d34dd3886beba4297817ff851c05f
 
 # http配置
 FastHttp:
@@ -44,13 +49,15 @@ Kafka:
   Processors: 8
   CommitInOrder: true
 
-# 数据库链接
+# 数据库链接  账号读zk
 WechatDb:
-  DataSource:
+  WechatDataSource:
+  BizUserDataSource:
   Timeout: 1s
   ReadTimeout: 5s
   WriteTimeout: 5s
 
+# 缓存链接 账号读zk
 
 # 链路追踪
 Telemetry:

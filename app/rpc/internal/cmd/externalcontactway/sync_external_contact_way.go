@@ -125,7 +125,7 @@ func (s *syncExternalContactWayCmd) saveContactWayInfo(ctx context.Context, conf
 		userList, _ := json.Marshal(configData.ContactWay.User)
 		partyList, _ := json.Marshal(configData.ContactWay.Party)
 
-		userServiceQrcodeData := &model.UserServiceQrcode{
+		userServiceQrcodeData := &model.TbUserServiceQrcode{
 			ConfigId:      configData.ContactWay.ConfigID,
 			Type:          int64(configData.ContactWay.Type),
 			Scene:         int64(configData.ContactWay.Scene),
@@ -233,7 +233,7 @@ func (s *syncExternalContactWayCmd) ContactWayTask(params *contactWayRequest.Req
 			userList, _ := json.Marshal(configData.ContactWay.User)
 			partyList, _ := json.Marshal(configData.ContactWay.Party)
 
-			userServiceQrcodeData := &model.UserServiceQrcode{
+			userServiceQrcodeData := &model.TbUserServiceQrcode{
 				ConfigId:      configId,
 				Type:          int64(configData.ContactWay.Type),
 				Scene:         int64(configData.ContactWay.Scene),

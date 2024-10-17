@@ -3,8 +3,8 @@ package model
 import (
 	"context"
 	"errors"
+
 	"github.com/Masterminds/squirrel"
-	"github.com/zeromicro/go-zero/core/stores/cache"
 	"github.com/zeromicro/go-zero/core/stores/sqlx"
 )
 
@@ -31,9 +31,9 @@ type (
 )
 
 // NewTbExternalUserFollowAttributeModel returns a model for the database table.
-func NewTbExternalUserFollowAttributeModel(conn sqlx.SqlConn, c cache.CacheConf, opts ...cache.Option) TbExternalUserFollowAttributeModel {
+func NewTbExternalUserFollowAttributeModel(conn sqlx.SqlConn) TbExternalUserFollowAttributeModel {
 	return &customTbExternalUserFollowAttributeModel{
-		defaultTbExternalUserFollowAttributeModel: newTbExternalUserFollowAttributeModel(conn, c, opts...),
+		defaultTbExternalUserFollowAttributeModel: newTbExternalUserFollowAttributeModel(conn),
 	}
 }
 
@@ -52,7 +52,7 @@ func (m *defaultTbExternalUserFollowAttributeModel) DeleteByExternalUserIdAndUse
 	if err != nil {
 		return err
 	}
-	_, err = m.ExecNoCacheCtx(ctx, sql, args...)
+	_, err = m.conn.ExecCtx(ctx, sql, args...)
 
 	return err
 }
@@ -71,7 +71,7 @@ func (m *defaultTbExternalUserFollowAttributeModel) FindListByExternalUserid(ctx
 		return resp, err
 	}
 
-	err = m.QueryRowsNoCacheCtx(ctx, &resp, sql, args...)
+	err = m.conn.QueryRowsCtx(ctx, &resp, sql, args...)
 
 	return resp, err
 }

@@ -2,11 +2,13 @@ package externalcontactuserlogic
 
 import (
 	"context"
-	"github.com/spf13/cast"
-	"github.com/zeromicro/go-zero/core/logx"
+
 	"rpc/internal/svc"
 	"rpc/internal/types"
 	"rpc/model"
+
+	"github.com/spf13/cast"
+	"github.com/zeromicro/go-zero/core/logx"
 )
 
 type SaveExternalUserFollowLogic struct {
@@ -36,7 +38,7 @@ func (l *SaveExternalUserFollowLogic) DeleteExternalUserFollow(crop string, exte
 		Userid:         externalUser.UserID,
 		Status:         cast.ToInt64(status),
 		DeletedAt:      externalUser.CreateTime,
-		Platform:       crop,
+		Crop:           crop,
 	}
 	err := l.svcCtx.ModelExternalUserFollow.Update(l.ctx, &update)
 	return err

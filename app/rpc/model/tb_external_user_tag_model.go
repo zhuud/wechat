@@ -3,8 +3,8 @@ package model
 import (
 	"context"
 	"errors"
+
 	"github.com/Masterminds/squirrel"
-	"github.com/zeromicro/go-zero/core/stores/cache"
 	"github.com/zeromicro/go-zero/core/stores/sqlx"
 )
 
@@ -24,9 +24,9 @@ type (
 )
 
 // NewTbExternalUserTagModel returns a model for the database table.
-func NewTbExternalUserTagModel(conn sqlx.SqlConn, c cache.CacheConf, opts ...cache.Option) TbExternalUserTagModel {
+func NewTbExternalUserTagModel(conn sqlx.SqlConn) TbExternalUserTagModel {
 	return &customTbExternalUserTagModel{
-		defaultTbExternalUserTagModel: newTbExternalUserTagModel(conn, c, opts...),
+		defaultTbExternalUserTagModel: newTbExternalUserTagModel(conn),
 	}
 }
 
@@ -44,7 +44,7 @@ func (m *customTbExternalUserTagModel) FindListByExternalTagId(ctx context.Conte
 		return resp, err
 	}
 
-	err = m.QueryRowsNoCacheCtx(ctx, &resp, sql, args...)
+	err = m.conn.QueryRowsCtx(ctx, &resp, sql, args...)
 
 	return resp, err
 }
