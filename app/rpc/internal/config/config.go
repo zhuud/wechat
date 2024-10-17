@@ -10,7 +10,10 @@ import (
 	"github.com/zhuud/go-library/svc/fasthttp"
 )
 
-const LocalCacheExpire = time.Second * 60
+const (
+	LocalCacheExpire = time.Second * 60
+	CropYx           = "yx"
+)
 
 // Config 总配置
 type Config struct {

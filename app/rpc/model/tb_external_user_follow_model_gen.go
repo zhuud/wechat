@@ -43,7 +43,7 @@ type (
 		ExternalUserid    string    `db:"external_userid"`     // 外部联系人的userid | 2020-09-10
 		Unionid           string    `db:"unionid"`             // 外部联系人在微信开放平台的唯一身份标识（联系人类型是微信用户且企业绑定了微信开发者ID有此字段 第三方应用和代开发应用均不可获取 上游企业不可获取下游企业客户该字段） | 2020-09-10
 		Userid            string    `db:"userid"`              // 联系人的userid | 2020-09-10
-		Platform          string    `db:"platform"`            // 企微平台(多企微情况) | 2020-09-10
+		Crop              string    `db:"crop"`                // 企微平台(多企微情况) | 2020-09-10
 		OperUserid        string    `db:"oper_userid"`         // 发起添加的userid(成员主动添加为成员的userid 客户主动添加为客户的外部联系人userid 内部成员共享/管理员分配为对应的成员/管理员userid) | 2020-09-10
 		AddWay            int64     `db:"add_way"`             // 添加外部联系人的方式(https://developer.work.weixin.qq.com/document/path/92114#%E6%9D%A5%E6%BA%90%E5%AE%9A%E4%B9%89) | 2020-09-10
 		State             string    `db:"state"`               // 外部联系人添加渠道 | 2020-09-10
@@ -98,8 +98,8 @@ func (m *defaultTbExternalUserFollowModel) FindOne(ctx context.Context, seq int6
 func (m *defaultTbExternalUserFollowModel) Insert(ctx context.Context, data *TbExternalUserFollow) (sql.Result, error) {
 	tbExternalUserFollowSeqKey := fmt.Sprintf("%s%v", cacheTbExternalUserFollowSeqPrefix, data.Seq)
 	ret, err := m.ExecCtx(ctx, func(ctx context.Context, conn sqlx.SqlConn) (result sql.Result, err error) {
-		query := fmt.Sprintf("insert into %s (%s) values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", m.table, tbExternalUserFollowRowsExpectAutoSet)
-		return conn.ExecCtx(ctx, query, data.ExternalUserid, data.Unionid, data.Userid, data.Platform, data.OperUserid, data.AddWay, data.State, data.StateChannel, data.StateChannelValue, data.Remark, data.RemarkMobiles, data.Description, data.RemarkCorpName, data.RemarkPicMediaid, data.Status, data.ChatAgreeStatus, data.DeletedAt)
+		query := fmt.Sprintf("insert into %s (%s) values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", m.table, tbExternalUserFollowRowsExpectAutoSet)
+		return conn.ExecCtx(ctx, query, data.ExternalUserid, data.Unionid, data.Userid, data.Crop, data.OperUserid, data.AddWay, data.State, data.StateChannel, data.StateChannelValue, data.Remark, data.RemarkMobiles, data.Description, data.RemarkCorpName, data.RemarkPicMediaid, data.Status)
 	}, tbExternalUserFollowSeqKey)
 	return ret, err
 }
@@ -108,7 +108,7 @@ func (m *defaultTbExternalUserFollowModel) Update(ctx context.Context, data *TbE
 	tbExternalUserFollowSeqKey := fmt.Sprintf("%s%v", cacheTbExternalUserFollowSeqPrefix, data.Seq)
 	_, err := m.ExecCtx(ctx, func(ctx context.Context, conn sqlx.SqlConn) (result sql.Result, err error) {
 		query := fmt.Sprintf("update %s set %s where `seq` = ?", m.table, tbExternalUserFollowRowsWithPlaceHolder)
-		return conn.ExecCtx(ctx, query, data.ExternalUserid, data.Unionid, data.Userid, data.Platform, data.OperUserid, data.AddWay, data.State, data.StateChannel, data.StateChannelValue, data.Remark, data.RemarkMobiles, data.Description, data.RemarkCorpName, data.RemarkPicMediaid, data.Status, data.ChatAgreeStatus, data.DeletedAt, data.Seq)
+		return conn.ExecCtx(ctx, query, data.ExternalUserid, data.Unionid, data.Userid, data.Crop, data.OperUserid, data.AddWay, data.State, data.StateChannel, data.StateChannelValue, data.Remark, data.RemarkMobiles, data.Description, data.RemarkCorpName, data.RemarkPicMediaid, data.Status, data.Seq)
 	}, tbExternalUserFollowSeqKey)
 	return err
 }

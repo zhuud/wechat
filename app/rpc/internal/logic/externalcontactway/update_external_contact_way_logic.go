@@ -4,14 +4,17 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"strings"
+
+	"rpc/internal/config"
+	"rpc/internal/svc"
+	"rpc/model"
+	"rpc/wechat"
+
 	"github.com/ArtisanCloud/PowerWeChat/v3/src/work/externalContact/contactWay/request"
 	msgTplgReq "github.com/ArtisanCloud/PowerWeChat/v3/src/work/externalContact/messageTemplate/request"
 	"github.com/spf13/cast"
 	"github.com/zeromicro/go-zero/core/logx"
-	"rpc/internal/svc"
-	"rpc/model"
-	"rpc/wechat"
-	"strings"
 )
 
 type UpdateExternalContactWayLogic struct {
@@ -112,7 +115,7 @@ func (l *UpdateExternalContactWayLogic) UpdateExternalContactWay(in *wechat.Exte
 	}
 
 	// 调用企微更新企业已配置的「联系我」方式接口
-	resUpdate, err := l.svcCtx.WeCom.WithCorp("yx").ContactWay.Update(l.ctx, options)
+	resUpdate, err := l.svcCtx.WeCom.WithCorp(config.CropYx).ContactWay.Update(l.ctx, options)
 	if err != nil {
 		l.Logger.Error("ContactWay_Update_Err", err)
 		return nil, err

@@ -11,10 +11,11 @@ import (
 var _ TbExternalUserAttributeModel = (*customTbExternalUserAttributeModel)(nil)
 
 const (
-	AttributeTypeText        = 0
-	AttributeTypeWeb         = 1
-	AttributeTypeMiniprogram = 2
-	AttributeTypeprofile     = 3
+	TbExternalUserAttrNormalStatus = 1
+	AttributeTypeText              = 0
+	AttributeTypeWeb               = 1
+	AttributeTypeMiniprogram       = 2
+	AttributeTypeprofile           = 3
 )
 
 type (

@@ -4,14 +4,17 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"strings"
+
+	"rpc/internal/config"
+	"rpc/internal/svc"
+	"rpc/model"
+	"rpc/wechat"
+
 	"github.com/ArtisanCloud/PowerWeChat/v3/src/work/externalContact/contactWay/request"
 	msgTplgReq "github.com/ArtisanCloud/PowerWeChat/v3/src/work/externalContact/messageTemplate/request"
 	"github.com/spf13/cast"
 	"github.com/zeromicro/go-zero/core/logx"
-	"rpc/internal/svc"
-	"rpc/model"
-	"rpc/wechat"
-	"strings"
 )
 
 type CreateExternalContactWayLogic struct {
@@ -117,7 +120,7 @@ func (l *CreateExternalContactWayLogic) CreateExternalContactWay(in *wechat.Exte
 	}
 
 	// 调用企微配置客户联系「联系我」方式接口
-	resAdd, err := l.svcCtx.WeCom.WithCorp("yx").ContactWay.Add(l.ctx, options)
+	resAdd, err := l.svcCtx.WeCom.WithCorp(config.CropYx).ContactWay.Add(l.ctx, options)
 	if err != nil {
 		l.Logger.Error("ContactWay_Add_Err", err)
 		return nil, err

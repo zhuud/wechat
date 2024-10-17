@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"rpc/internal/config"
 	"rpc/internal/svc"
 	"rpc/wechat"
 
@@ -36,7 +37,7 @@ func (l *GetExternalContactWayListLogic) GetExternalContactWayList(in *wechat.Ex
 		EndTime:   int64(in.EndTime),
 	}
 
-	list, err := l.svcCtx.WeCom.WithCorp("yx").ContactWay.List(context.Background(), params)
+	list, err := l.svcCtx.WeCom.WithCorp(config.CropYx).ContactWay.List(context.Background(), params)
 
 	if err != nil {
 		return nil, err

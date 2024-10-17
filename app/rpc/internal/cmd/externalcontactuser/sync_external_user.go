@@ -4,9 +4,10 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"rpc/internal/logic/externalcontactuser/save"
 	"time"
 
+	"rpc/internal/config"
+	"rpc/internal/logic/externalcontactuser/save"
 	"rpc/internal/svc"
 
 	"github.com/ArtisanCloud/PowerWeChat/v3/src/work/externalContact/response"
@@ -39,7 +40,7 @@ func newSyncExternalUserCmd(ctx context.Context, svcCtx *svc.ServiceContext) *sy
 }
 
 func (s *syncExternalUserCmd) Do(args []string) error {
-	crop := "yx"
+	crop := config.CropYx
 	if len(args) > 0 {
 		crop = args[0]
 	}
@@ -105,12 +106,12 @@ func (s *syncExternalUserCmd) batchGetExternal(crop string, userIdList []string)
 		// TODO 测试
 		limit = 1
 		// limit            = 100
-		maxSize = 20000
+		maxSize = 100000
 		size    = 0
 	)
 
 	for {
-		// 一个user最多5000用户 正常不会循环这么多次
+		// 一个user最多10000用户 正常不会循环这么多次
 		size++
 		if size > maxSize {
 			s.svcCtx.Alarm.SendLarkCtx(s.ctx, fmt.Sprintf("syncExternalUserCmd.batchGetExternal.maxSize userIdList: %v, cursor:%s, error: 分页获取循坏异常 有可能死循环", userIdList, cursor))
@@ -157,7 +158,7 @@ func (s *syncExternalUserCmd) getFollowUserList() ([]string, error) {
 	userIdList := make([]string, 0)
 
 	err := retry.Do(func() error {
-		userList, err := s.svcCtx.WeCom.WithCorp("yx").ExternalUser.GetFollowUsers(s.ctx)
+		userList, err := s.svcCtx.WeCom.WithCorp(config.CropYx).ExternalUser.GetFollowUsers(s.ctx)
 		if err != nil {
 			return err
 		}
