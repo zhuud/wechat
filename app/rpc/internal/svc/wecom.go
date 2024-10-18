@@ -10,6 +10,7 @@ import (
 	"github.com/ArtisanCloud/PowerWeChat/v3/src/work"
 	"github.com/ArtisanCloud/PowerWeChat/v3/src/work/externalContact"
 	"github.com/ArtisanCloud/PowerWeChat/v3/src/work/externalContact/contactWay"
+	"github.com/ArtisanCloud/PowerWeChat/v3/src/work/externalContact/messageTemplate"
 	"github.com/ArtisanCloud/PowerWeChat/v3/src/work/user"
 	"github.com/zeromicro/go-zero/core/logx"
 	"github.com/zeromicro/go-zero/core/stores/redis"
@@ -21,9 +22,11 @@ type (
 	}
 
 	WeComApi struct {
-		User         *user.Client
-		ExternalUser *externalContact.Client
-		ContactWay   *contactWay.Client
+		User            *user.Client
+		ExternalUser    *externalContact.Client
+		ContactWay      *contactWay.Client
+		MessageTemplate *messageTemplate.Client
+		// TODO chat group
 	}
 )
 
@@ -82,6 +85,7 @@ func initExternalContact(wc *WeComApi, corpConf config.WeComConf, cache kernel.C
 	}
 	wc.ExternalUser = wce.ExternalContact
 	wc.ContactWay = wce.ExternalContactContactWay
+	wc.MessageTemplate = wce.ExternalContactMessageTemplate
 }
 
 func (w *WeCom) WithCorp(corpKey string) *WeComApi {

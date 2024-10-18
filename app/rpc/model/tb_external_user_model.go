@@ -3,6 +3,7 @@ package model
 import (
 	"context"
 	"errors"
+	"fmt"
 
 	"github.com/Masterminds/squirrel"
 	"github.com/zeromicro/go-zero/core/stores/sqlx"
@@ -19,6 +20,7 @@ type (
 	// and implement the added methods in customTbExternalUserModel.
 	TbExternalUserModel interface {
 		tbExternalUserModel
+		FindOne(ctx context.Context, externalUserid string) (*TbExternalUser, error)
 		FindListByExternalUserid(ctx context.Context, externalUserid []string) ([]*TbExternalUser, error)
 	}
 
@@ -31,6 +33,20 @@ type (
 func NewTbExternalUserModel(conn sqlx.SqlConn) TbExternalUserModel {
 	return &customTbExternalUserModel{
 		defaultTbExternalUserModel: newTbExternalUserModel(conn),
+	}
+}
+
+func (m *customTbExternalUserModel) FindOne(ctx context.Context, externalUserid string) (*TbExternalUser, error) {
+	query := fmt.Sprintf("select %s from %s where `external_userid` = ? and status = %d limit 1", tbExternalUserRows, m.table, TbExternalUserNormalStatus)
+	var resp TbExternalUser
+	err := m.conn.QueryRowCtx(ctx, &resp, query, externalUserid)
+	switch err {
+	case nil:
+		return &resp, nil
+	case sqlx.ErrNotFound:
+		return nil, nil
+	default:
+		return nil, err
 	}
 }
 

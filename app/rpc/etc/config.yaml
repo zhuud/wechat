@@ -1,0 +1,81 @@
+Name: wechat-rpc
+ListenOn: 0.0.0.0:9527
+Mode: dev
+MaxConns: 10000
+Timeout: 3000 # ms
+CpuThreshold: 900 # 降载阈值 默认900(90%) 可允许设置范围0到1000
+
+# 是否开启健康检查
+Health: true
+#服务配置
+ZkAddr:
+  - 10.10.10.100:2181
+DevServer:
+  Enabled: true
+  Port: 6062 # 开发环境没用容器的话api rpc相同端口会冲突
+  HealthPath: "/healthz"
+  EnableMetrics: true
+  MetricsPath: "/metrics"
+  EnablePprof: true
+
+# 是否打印详细日志
+Verbose: true
+Log:
+  ServiceName: wechat-rpc
+  Level: info
+  Stat: true
+  Compress: false # 是否压缩日志
+  StackCooldownMillis: 1000   # 堆栈打印冷却时间
+  Mode: file
+  Path: ../../deploy/log/rpc
+  KeepDays: 180
+  Rotation: daily
+Alarm:
+  FSAppId: cli_a0b61445cf78d00c
+  FsAppSecret: fuJ4u8qVYubqh1ltdbxJOgGluDX1v1Ah
+  FsReceiveIdType: chat_id
+  FsReceiveId: oc_060d34dd3886beba4297817ff851c05f
+
+# http配置
+FastHttp:
+  ReadTimeout: 3
+  WriteTimeout: 3
+  MaxConnWaitTimeout: 3
+  Concurrency: 1024
+
+# kafka配置
+Kafka:
+  Name: wechat-mq
+  Brokers:
+    - 10.10.10.151:9092
+  Group:
+  Topic:
+  Offset: last
+  Conns: 1
+  Consumers: 8
+  Processors: 8
+  CommitInOrder: true
+
+# 数据库链接  账号读zk
+WechatDb:
+  Timeout: 1s
+  ReadTimeout: 5s
+  WriteTimeout: 5s
+  # 以下配置暂时不可设置 了解即可
+  MaxIdleConn: 64
+  MaxOpenConn: 64
+  ConnMaxLifeTime: 60
+  ConnMaxIdleTime: 60
+
+# 缓存链接 账号读zk
+CacheRedis:
+  Host:
+  Pass:
+  Type: node
+
+# 链路追踪
+Telemetry:
+  Name: wechat-rpc
+  Endpoint: http://127.0.0.1:14268/api/traces
+  Sampler: 1.0
+  Batcher: jaeger

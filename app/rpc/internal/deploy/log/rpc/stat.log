@@ -1,0 +1,3 @@
+{"@timestamp":"2024-10-17T17:53:52.175+08:00","caller":"stat/usage.go:61","content":"CPU: 0m, MEMORY: Alloc=6.2Mi, TotalAlloc=8.7Mi, Sys=18.1Mi, NumGC=3","level":"stat"}
+{"@timestamp":"2024-10-17T17:57:26.308+08:00","caller":"stat/usage.go:61","content":"CPU: 0m, MEMORY: Alloc=6.6Mi, TotalAlloc=9.0Mi, Sys=18.4Mi, NumGC=3","level":"stat"}
+{"@timestamp":"2024-10-18T17:46:18.260+08:00","caller":"stat/usage.go:61","content":"CPU: 0m, MEMORY: Alloc=6.5Mi, TotalAlloc=9.7Mi, Sys=18.1Mi, NumGC=4","level":"stat"}

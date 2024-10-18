@@ -50,10 +50,11 @@ type (
 		Description       string    `db:"description"`         // 对外部联系人的描述 | 2020-09-10
 		RemarkCorpName    string    `db:"remark_corp_name"`    // 对外部联系人备注的所属公司名称 | 2020-09-10
 		RemarkPicMediaid  string    `db:"remark_pic_mediaid"`  // 对外部联系人备注的图片ID | 2020-09-10
-		Status            int64     `db:"status"`              // 状态 (0:删除,1:正常) | 2020-09-10
+		ChatAgreeStatus   int64     `db:"chat_agree_status"`   // 会话存档状态 (0:不同意 / 1:同意)
+		LastChatTime      time.Time `db:"last_chat_time"`      // 最近沟通时间 | 2020-09-10
+		Status            int64     `db:"status"`              // 状态 (0:删除 / 1:正常) | 2020-09-10
 		CreatedAt         time.Time `db:"created_at"`          // 创建时间 | 2020-09-10
 		UpdatedAt         time.Time `db:"updated_at"`          // 更新时间 | 2020-09-10
-		ChatAgreeStatus   uint64    `db:"chat_agree_status"`   // 会话存档状态 0不同意 1同意
 		DeletedAt         time.Time `db:"deleted_at"`          // 删除时间 | 2020-09-10
 	}
 )
@@ -86,14 +87,14 @@ func (m *defaultTbExternalUserFollowModel) FindOne(ctx context.Context, seq int6
 }
 
 func (m *defaultTbExternalUserFollowModel) Insert(ctx context.Context, data *TbExternalUserFollow) (sql.Result, error) {
-	query := fmt.Sprintf("insert into %s (%s) values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", m.table, tbExternalUserFollowRowsExpectAutoSet)
-	ret, err := m.conn.ExecCtx(ctx, query, data.ExternalUserid, data.Unionid, data.Userid, data.Crop, data.OperUserid, data.AddWay, data.State, data.StateChannel, data.StateChannelValue, data.Remark, data.RemarkMobiles, data.Description, data.RemarkCorpName, data.RemarkPicMediaid, data.Status, data.ChatAgreeStatus, data.DeletedAt)
+	query := fmt.Sprintf("insert into %s (%s) values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", m.table, tbExternalUserFollowRowsExpectAutoSet)
+	ret, err := m.conn.ExecCtx(ctx, query, data.ExternalUserid, data.Unionid, data.Userid, data.Crop, data.OperUserid, data.AddWay, data.State, data.StateChannel, data.StateChannelValue, data.Remark, data.RemarkMobiles, data.Description, data.RemarkCorpName, data.RemarkPicMediaid, data.ChatAgreeStatus, data.LastChatTime, data.Status, data.DeletedAt)
 	return ret, err
 }
 
 func (m *defaultTbExternalUserFollowModel) Update(ctx context.Context, data *TbExternalUserFollow) error {
 	query := fmt.Sprintf("update %s set %s where `seq` = ?", m.table, tbExternalUserFollowRowsWithPlaceHolder)
-	_, err := m.conn.ExecCtx(ctx, query, data.ExternalUserid, data.Unionid, data.Userid, data.Crop, data.OperUserid, data.AddWay, data.State, data.StateChannel, data.StateChannelValue, data.Remark, data.RemarkMobiles, data.Description, data.RemarkCorpName, data.RemarkPicMediaid, data.Status, data.ChatAgreeStatus, data.DeletedAt, data.Seq)
+	_, err := m.conn.ExecCtx(ctx, query, data.ExternalUserid, data.Unionid, data.Userid, data.Crop, data.OperUserid, data.AddWay, data.State, data.StateChannel, data.StateChannelValue, data.Remark, data.RemarkMobiles, data.Description, data.RemarkCorpName, data.RemarkPicMediaid, data.ChatAgreeStatus, data.LastChatTime, data.Status, data.DeletedAt, data.Seq)
 	return err
 }
 

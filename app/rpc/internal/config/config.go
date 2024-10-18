@@ -1,6 +1,7 @@
 package config
 
 import (
+	"flag"
 	"time"
 
 	"github.com/zeromicro/go-queue/kq"
@@ -12,12 +13,19 @@ import (
 
 const (
 	LocalCacheExpire = time.Second * 60
+	CropYm           = "ym" // 通过zk wecom_corp 定义的
 	CropYx           = "yx"
+	CropZx           = "zx"
+)
+
+var (
+	CmdConfigFile = flag.String("f", "", "the config file")
 )
 
 // Config 总配置
 type Config struct {
 	zrpc.RpcServerConf
+	Secret     Secret              `json:",optional"`
 	Kafka      kq.KqConf           `json:",optional"`
 	WechatDb   MysqlConf           `json:",optional"`
 	CacheRedis redis.RedisConf     `json:",optional"`
@@ -28,16 +36,21 @@ type Config struct {
 
 // Config 子配置
 type (
+	Secret struct {
+		Cryptographic string `json:",optional"`
+	}
+
 	MysqlConf struct {
-		WechatDataSource  string `json:",optional"`
-		BizUserDataSource string `json:",optional"`
-		Timeout           string `json:",default=1s"`
-		ReadTimeout       string `json:",default=5s"`
-		WriteTimeout      string `json:",default=5s"`
-		MaxIdleConn       int    `json:",optional"`
-		MaxOpenConn       int    `json:",optional"`
-		ConnMaxLifeTime   int    `json:",optional"`
-		ConnMaxIdleTime   int    `json:",optional"`
+		WechatDataSource        string `json:",optional"`
+		BizUserDataSource       string `json:",optional"`
+		HistoryWechatDataSource string `json:",optional"`
+		Timeout                 string `json:",default=1s"`
+		ReadTimeout             string `json:",default=5s"`
+		WriteTimeout            string `json:",default=5s"`
+		MaxIdleConn             int    `json:",optional"`
+		MaxOpenConn             int    `json:",optional"`
+		ConnMaxLifeTime         int    `json:",optional"`
+		ConnMaxIdleTime         int    `json:",optional"`
 	}
 
 	WeComConf struct {

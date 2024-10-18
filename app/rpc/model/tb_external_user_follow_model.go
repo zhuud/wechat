@@ -10,7 +10,9 @@ import (
 )
 
 const (
-	TbExternalUserFollowNormalStatus = 1
+	TbExternalUserFollowNormalStatus             = 1
+	TbExternalUserFollowExternalUserDeleteStatus = 0 // external_user 删除
+	TbExternalUserFollowStaffDeleteStatus        = 2 // staff 删除
 )
 
 var _ TbExternalUserFollowModel = (*customTbExternalUserFollowModel)(nil)

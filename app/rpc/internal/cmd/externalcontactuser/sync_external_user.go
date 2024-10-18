@@ -56,7 +56,7 @@ func (s *syncExternalUserCmd) Do(args []string) error {
 		}
 
 		// TODO 测试 只跑一个
-		source <- "kanyaYang"
+		source <- "ZhangZeLong"
 		return
 
 		for _, userId := range userIdList {
@@ -84,7 +84,7 @@ func (s *syncExternalUserCmd) Do(args []string) error {
 
 		for _, externalUser := range externalUserList {
 			s.Infof("syncExternalUserCmd.saveExternalUser info: %s", externalUser.ExternalContact.ExternalUserID)
-			if err := saveLogic.Save(crop, externalUser); err != nil {
+			if err := saveLogic.Save(crop, externalUser, "cmd"); err != nil {
 				s.svcCtx.Alarm.SendLarkCtx(s.ctx, fmt.Sprintf("syncExternalUserCmd.saveExternalUser error: %v", err))
 			}
 		}

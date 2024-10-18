@@ -9,6 +9,7 @@ import (
 
 	"github.com/zeromicro/go-zero/core/collection"
 	"github.com/zeromicro/go-zero/core/logx"
+	"github.com/zeromicro/go-zero/core/proc"
 	"github.com/zeromicro/go-zero/core/stores/redis"
 	"github.com/zeromicro/go-zero/core/stores/sqlx"
 	"github.com/zhuud/go-library/svc/fasthttp"
@@ -40,9 +41,17 @@ var (
 	once sync.Once
 )
 
-func NewServiceContext(c config.Config) *ServiceContext {
+func NewServiceContext() *ServiceContext {
 
 	once.Do(func() {
+		// 配置 服务
+		c := config.MustLoad()
+		c.MustSetUp()
+		proc.AddShutdownListener(func() {
+			_ = logx.Close()
+		})
+
+		// 实例化
 		// local cache
 		localCache, err := collection.NewCache(config.LocalCacheExpire)
 		logx.Must(err)

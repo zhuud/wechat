@@ -3,6 +3,7 @@ module rpc
 go 1.22.0
 
 require (
+	github.com/ArtisanCloud/PowerLibs/v3 v3.2.5
 	github.com/ArtisanCloud/PowerWeChat/v3 v3.2.39
 	github.com/Masterminds/squirrel v1.5.4
 	github.com/avast/retry-go v3.0.0+incompatible
@@ -12,15 +13,14 @@ require (
 	github.com/spf13/cobra v1.8.1
 	github.com/zeromicro/go-queue v1.2.2
 	github.com/zeromicro/go-zero v1.7.1
-	github.com/zhuud/go-library v0.0.0-20240920064304-9e581ec90b91
 	go.uber.org/automaxprocs v1.5.3
+	golang.org/x/time v0.6.0
 	google.golang.org/grpc v1.66.0
 	google.golang.org/protobuf v1.34.2
 )
 
 require (
 	filippo.io/edwards25519 v1.1.0 // indirect
-	github.com/ArtisanCloud/PowerLibs/v3 v3.2.5 // indirect
 	github.com/ArtisanCloud/PowerSocialite/v3 v3.0.7 // indirect
 	github.com/andybalholm/brotli v1.1.0 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
@@ -87,6 +87,7 @@ require (
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
 	github.com/valyala/fasthttp v1.55.0 // indirect
 	github.com/x448/float16 v0.8.4 // indirect
+	github.com/zhuud/go-library v0.0.0-20241018102659-90f3bfc16050 // indirect
 	go.etcd.io/etcd/api/v3 v3.5.15 // indirect
 	go.etcd.io/etcd/client/pkg/v3 v3.5.15 // indirect
 	go.etcd.io/etcd/client/v3 v3.5.15 // indirect
@@ -109,7 +110,6 @@ require (
 	golang.org/x/sys v0.24.0 // indirect
 	golang.org/x/term v0.23.0 // indirect
 	golang.org/x/text v0.17.0 // indirect
-	golang.org/x/time v0.6.0 // indirect
 	google.golang.org/genproto/googleapis/api v0.0.0-20240827150818-7e3bb234dfed // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20240827150818-7e3bb234dfed // indirect
 	gopkg.in/inf.v0 v0.9.1 // indirect

@@ -1,27 +1,14 @@
 package cmd
 
 import (
-	"github.com/zeromicro/go-zero/core/logx"
-	"github.com/zeromicro/go-zero/core/proc"
-	"log"
 	"rpc/internal/cmd/externalcontactuser"
 	"rpc/internal/cmd/externalcontactway"
-	"rpc/internal/config"
 	"rpc/internal/svc"
 
 	"github.com/spf13/cobra"
 )
 
-func RegisterCmd(c config.Config, svcCtx *svc.ServiceContext) []*cobra.Command {
-	err := c.SetUp()
-	if err != nil {
-		log.Fatalf("cmd.RegisterCmd SetUp config:%v, error: %v", c, err)
-	}
-
-	proc.AddShutdownListener(func() {
-		_ = logx.Close()
-	})
-
+func RegisterCmd(svcCtx *svc.ServiceContext) []*cobra.Command {
 	return []*cobra.Command{
 		{
 			Use:  "CmdSyncExternalUser",

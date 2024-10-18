@@ -12,28 +12,39 @@ import (
 	"github.com/zhuud/go-library/svc/zookeeper"
 )
 
-func init() {
-	zk, err := zookeeper.NewZookeeperClient()
-	if err != nil {
-		log.Fatalf("config.init.NewZookeeperClient error: %s", err.Error())
+func setup() {
+	path := conf.AppConfPath
+	if CmdConfigFile != nil {
+		path = *CmdConfigFile
 	}
-	conf.AppendReader(confx.NewZookeeperReader(zk))
+	conf.MustSetUp(conf.Conf{FilePath: path})
+	conf.AppendReader(confx.NewZookeeperReader(zookeeper.MustNewZookeeperClient()))
 }
 
 func MustLoad() Config {
+	setup()
+
 	c := Config{}
 	err := conf.GetUnmarshal("", &c)
 	if err != nil {
 		log.Fatalf("config.MustLoad error: %s", err.Error())
 	}
 
+	// 密钥
+	c.Secret = mustLoadSecret()
+
+	// 数据库
 	if len(c.WechatDb.WechatDataSource) == 0 {
 		c.WechatDb.WechatDataSource = mustLoadMysql(c, "db_wechat")
 	}
 	if len(c.WechatDb.BizUserDataSource) == 0 {
-		c.WechatDb.WechatDataSource = mustLoadMysql(c, "db_passport")
+		c.WechatDb.BizUserDataSource = mustLoadMysql(c, "db_user_rw")
+	}
+	if len(c.WechatDb.BizUserDataSource) == 0 {
+		c.WechatDb.BizUserDataSource = mustLoadMysql(c, "db_event")
 	}
 
+	// 缓存
 	if len(c.CacheRedis.Host) == 0 {
 		c.CacheRedis = mustLoadRedis("redis")
 	}
@@ -46,6 +57,19 @@ func MustLoad() Config {
 	c.WeCom = mustLoadWeCom()
 
 	return c
+}
+
+func mustLoadSecret() Secret {
+	sc := Secret{}
+	err := conf.GetUnmarshal(fmt.Sprintf("/qconf/web-config/%s", "privatedomain_wechat_secret"), &sc)
+	if err != nil {
+		log.Fatalf("config.mustLoadSecret error: %s", err.Error())
+	}
+	if len(sc.Cryptographic) == 0 {
+		log.Fatalf("config.mustLoadSecret incomplete secret config, config: %v", sc)
+	}
+
+	return sc
 }
 
 func mustLoadMysql(c Config, dbname string) string {

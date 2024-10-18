@@ -13,12 +13,6 @@ import (
 	"github.com/davecgh/go-spew/spew"
 )
 
-var svcCtx *svc.ServiceContext
-
-func init() {
-	svcCtx = svc.NewServiceContext(config.MustLoad())
-}
-
 func Test_GetExternalUserInfo(t *testing.T) {
 	type args struct {
 		param *wechat.ExternalUserInfoReq
@@ -43,14 +37,14 @@ func Test_GetExternalUserInfo(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			l := NewGetExternalUserInfoLogic(context.Background(), svcCtx)
+			l := NewGetExternalUserInfoLogic(context.Background(), svc.NewServiceContext())
 			if got, err := l.GetExternalUserInfo(tt.args.param); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("res = %v, want %v, err %v", got, tt.want, err)
 			}
 		})
 	}
 
-	r, e := NewGetExternalUserInfoLogic(context.Background(), svcCtx).GetExternalUserInfo(&wechat.ExternalUserInfoReq{
+	r, e := NewGetExternalUserInfoLogic(context.Background(), svc.NewServiceContext()).GetExternalUserInfo(&wechat.ExternalUserInfoReq{
 		ExternalUseridList: []string{"wmYYltDAAAlg093GN65jtwLAn1VqOi5g", "sssss"},
 	})
 	spew.Dump(r, e)
@@ -58,12 +52,12 @@ func Test_GetExternalUserInfo(t *testing.T) {
 }
 
 func Test_Get(t *testing.T) {
-	spew.Dump(svcCtx.WeCom.WithCorp(config.CropYx).ExternalUser.Get(context.Background(), "wmYYltDAAAlg093GN65jtwLAn1VqOi5g", ""))
+	spew.Dump(svc.NewServiceContext().WeCom.WithCorp(config.CropYx).ExternalUser.Get(context.Background(), "wmYYltDAAAlg093GN65jtwLAn1VqOi5g", ""))
 	return
 }
 
 func Test_GetByUserId(t *testing.T) {
 	prasms := &request2.RequestListContactWay{Limit: 10}
-	list, err := svcCtx.WeCom.WithCorp(config.CropYx).ContactWay.List(context.Background(), prasms)
+	list, err := svc.NewServiceContext().WeCom.WithCorp(config.CropYx).ContactWay.List(context.Background(), prasms)
 	spew.Dump(list, err)
 }

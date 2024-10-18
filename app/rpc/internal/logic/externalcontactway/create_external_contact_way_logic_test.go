@@ -53,7 +53,7 @@ func TestCreateExternalContactWayLogic_CreateExternalContactWay(t *testing.T) {
 }
 
 func Test_CreateExternalContactWay(t *testing.T) {
-	var svcCtx *svc.ServiceContext = svc.NewServiceContext(config.MustLoad())
+	var svcCtx *svc.ServiceContext = svc.NewServiceContext()
 
 	req := &request2.RequestListContactWay{Limit: 10}
 	list, err := svcCtx.WeCom.WithCorp(config.CropYx).ContactWay.List(context.Background(), req)

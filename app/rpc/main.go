@@ -1,8 +1,9 @@
 package main
 
 import (
+	"flag"
+
 	"rpc/internal/cmd"
-	"rpc/internal/config"
 	"rpc/internal/mq"
 	"rpc/internal/server"
 	"rpc/internal/svc"
@@ -12,12 +13,12 @@ import (
 )
 
 func main() {
+	flag.Parse()
 
-	c := config.MustLoad()
-	svcCtx := svc.NewServiceContext(c)
+	svcCtx := svc.NewServiceContext()
 
-	app.AddCommand(server.RegisterRpc(c, svcCtx))
-	app.AddCommand(cmd.RegisterCmd(c, svcCtx)...)
-	app.AddCommand(mq.RegisterMq(c, svcCtx)...)
+	app.AddCommand(server.RegisterRpc(svcCtx))
+	app.AddCommand(cmd.RegisterCmd(svcCtx)...)
+	app.AddCommand(mq.RegisterMq(svcCtx)...)
 	app.Run()
 }

@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"rpc/internal/config"
 	"strings"
 	"time"
 
@@ -15,6 +16,7 @@ import (
 	"github.com/avast/retry-go"
 	jsoniter "github.com/json-iterator/go"
 	"github.com/zeromicro/go-zero/core/logx"
+	"github.com/zeromicro/go-zero/core/stores/sqlx"
 	"github.com/zhuud/go-library/utils"
 )
 
@@ -22,17 +24,19 @@ type SaveExternalUserLogic struct {
 	ctx    context.Context
 	svcCtx *svc.ServiceContext
 	logx.Logger
+	HistoryWechatModel model.TbPrivateDomainUserModel // 兼容历史数据 新项目不需要
 }
 
 func NewSaveExternalUserLogic(ctx context.Context, svcCtx *svc.ServiceContext) *SaveExternalUserLogic {
 	return &SaveExternalUserLogic{
-		ctx:    ctx,
-		svcCtx: svcCtx,
-		Logger: logx.WithContext(ctx),
+		ctx:                ctx,
+		svcCtx:             svcCtx,
+		Logger:             logx.WithContext(ctx),
+		HistoryWechatModel: model.NewTbPrivateDomainUserModel(sqlx.NewMysql(svcCtx.Config.WechatDb.HistoryWechatDataSource)),
 	}
 }
 
-func (s *SaveExternalUserLogic) Save(crop string, wechatExternalUser *response.ResponseExternalContact) error {
+func (s *SaveExternalUserLogic) Save(crop string, wechatExternalUser *response.ResponseExternalContact, mode string) error {
 	if wechatExternalUser == nil || wechatExternalUser.ExternalContact == nil {
 		return errors.New("externalUser is nil")
 	}
@@ -105,26 +109,22 @@ func (s *SaveExternalUserLogic) Save(crop string, wechatExternalUser *response.R
 		StateChannel:      "",
 		StateChannelValue: "",
 		Remark:            wechatExternalUser.FollowInfo.Remark,
-		RemarkMobiles:     strings.Join(wechatExternalUser.FollowInfo.RemarkMobiles, ","),
-		Description:       wechatExternalUser.FollowInfo.Description,
-		RemarkCorpName:    wechatExternalUser.FollowInfo.RemarkCorpName,
-		RemarkPicMediaid:  "", // TODO 还没有此字段
-		Status:            model.TbExternalUserFollowNormalStatus,
-		CreatedAt:         ts,
-		UpdatedAt:         ts,
+		// 手机号加密存储
+		RemarkMobiles:    utils.XorEncrypt(strings.Join(wechatExternalUser.FollowInfo.RemarkMobiles, ","), s.svcCtx.Config.Secret.Cryptographic),
+		Description:      wechatExternalUser.FollowInfo.Description,
+		RemarkCorpName:   wechatExternalUser.FollowInfo.RemarkCorpName,
+		RemarkPicMediaid: "", // TODO 还没有此字段
+		Status:           model.TbExternalUserFollowNormalStatus,
+		CreatedAt:        ts,
+		UpdatedAt:        ts,
 	}
-	stateList := make([]string, 0)
-	// "state": "99_9999#1#01234567890123456789"  或者 "99_9999#0#{"hid":15731}"
-	// 充分校验下 防止正常渠道里带#号
-	if strings.Contains(wechatExternalUser.FollowInfo.State, "#") {
-		if stateList = strings.Split(externalUserFollow.State, "#"); len(stateList) == 3 && utils.ArrayIn(stateList[1], []string{"0", "1"}) {
-			externalUserFollow.StateChannel = stateList[0]
-			externalUserFollow.StateChannelValue = stateList[2]
-			if stateList[1] == "1" {
-				// TODO 从缓存里面取具体内容
-			}
-		}
+	// 加c渠道自定义数据处理
+	s.fmtJoinCCallbackData(externalUserFollow)
+	// 兼容历史数据关系状态 后续下掉
+	if mode == "cmd" {
+		s.getFromHistory(externalUserFollow)
 	}
+
 	err = s.SaveExternalUserFollow(externalUserFollow)
 	if err != nil {
 		return errors.New(fmt.Sprintf("保存外部用户关系信息失败, error: %v", err))
@@ -203,6 +203,22 @@ func (s *SaveExternalUserLogic) SaveExternalUserAttr(externalUserid string, exte
 	return err
 }
 
+func (s *SaveExternalUserLogic) fmtJoinCCallbackData(externalUserFollow *model.TbExternalUserFollow) {
+	stateList := make([]string, 0)
+	// "state": "99_9999#1#01234567890123456789"  或者 "99_9999#0#{"hid":15731}"
+	// 充分校验下 防止正常渠道里带#号
+	if !strings.Contains(externalUserFollow.State, "#") {
+		return
+	}
+	if stateList = strings.Split(externalUserFollow.State, "#"); len(stateList) == 3 && utils.ArrayIn(stateList[1], []string{"0", "1"}) {
+		externalUserFollow.StateChannel = stateList[0]
+		externalUserFollow.StateChannelValue = stateList[2]
+		if stateList[1] == "1" {
+			// TODO 从缓存里面取具体内容
+		}
+	}
+}
+
 func (s *SaveExternalUserLogic) SaveExternalUserFollow(externalUserFollow *model.TbExternalUserFollow) error {
 	if externalUserFollow == nil || len(externalUserFollow.ExternalUserid) == 0 || len(externalUserFollow.Userid) == 0 {
 		return errors.New("SaveExternalUserFollow is nil")
@@ -246,4 +262,25 @@ func (s *SaveExternalUserLogic) SaveExternalUserFollowAttr(externalUserid, useri
 	}
 
 	return nil
+}
+
+func (s *SaveExternalUserLogic) getFromHistory(externalUserFollow *model.TbExternalUserFollow) {
+	// 1新氧医美  2新氧优享 3新氧咨询
+	dbHistory, _ := s.HistoryWechatModel.FindOneByExternalUserIdAndUserId(s.ctx, externalUserFollow.ExternalUserid, externalUserFollow.Userid, config.MapCropToHistoryPlatform(externalUserFollow.Crop))
+	if dbHistory != nil {
+		externalUserFollow.ChatAgreeStatus = dbHistory.ChatAgreeStatus
+		if dbHistory.LastChatTime.Format(time.DateTime) != "1000-01-01 00:00:00" && dbHistory.LastChatTime.Format(time.DateTime) != "0001-01-01 00:00:00" {
+			externalUserFollow.LastChatTime = dbHistory.LastChatTime
+		}
+		if dbHistory.AddTime.Format(time.DateTime) != "1000-01-01 00:00:00" && dbHistory.AddTime.Format(time.DateTime) != "0001-01-01 00:00:00" {
+			externalUserFollow.CreatedAt = dbHistory.AddTime
+		}
+		if dbHistory.Status != 1 && dbHistory.BlacklistTime.Format(time.DateTime) != "1000-01-01 00:00:00" && dbHistory.BlacklistTime.Format(time.DateTime) != "0001-01-01 00:00:00" {
+			externalUserFollow.Status = model.TbExternalUserFollowExternalUserDeleteStatus
+			if dbHistory.BlacklistType == "staff" {
+				externalUserFollow.Status = model.TbExternalUserFollowStaffDeleteStatus
+			}
+			externalUserFollow.DeletedAt = dbHistory.BlacklistTime
+		}
+	}
 }

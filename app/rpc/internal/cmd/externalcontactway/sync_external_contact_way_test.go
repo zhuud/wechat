@@ -6,16 +6,13 @@ import (
 	"testing"
 	"time"
 
-	"rpc/internal/config"
 	"rpc/internal/svc"
 
 	"github.com/zeromicro/go-zero/core/fx"
 )
 
 func Test(t *testing.T) {
-	c := config.MustLoad()
-	svcCtx := svc.NewServiceContext(c)
-	newSyncExternalContactWayCmd(context.Background(), svcCtx).Do([]string{})
+	newSyncExternalContactWayCmd(context.Background(), svc.NewServiceContext()).Do([]string{})
 }
 
 func TestFx(t *testing.T) {

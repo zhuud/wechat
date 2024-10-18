@@ -3,7 +3,6 @@ package server
 import (
 	"fmt"
 
-	"rpc/internal/config"
 	"rpc/internal/svc"
 	"rpc/wechat"
 
@@ -17,22 +16,22 @@ import (
 	externalcontactwayserver "rpc/internal/server/externalcontactway"
 )
 
-func RegisterRpc(c config.Config, svcCtx *svc.ServiceContext) *cobra.Command {
+func RegisterRpc(svcCtx *svc.ServiceContext) *cobra.Command {
 	return &cobra.Command{
 		Use: "serve",
 		Run: func(cmd *cobra.Command, args []string) {
 
-			s := zrpc.MustNewServer(c.RpcServerConf, func(grpcServer *grpc.Server) {
+			s := zrpc.MustNewServer(svcCtx.Config.RpcServerConf, func(grpcServer *grpc.Server) {
 
 				register(grpcServer, svcCtx)
 
-				if c.Mode == service.DevMode || c.Mode == service.TestMode {
+				if svcCtx.Config.Mode == service.DevMode || svcCtx.Config.Mode == service.TestMode {
 					reflection.Register(grpcServer)
 				}
 			})
 			defer s.Stop()
 
-			fmt.Printf("Starting Rpc Server At %s...\n", c.ListenOn)
+			fmt.Printf("Starting Rpc Server At %s...\n", svcCtx.Config.ListenOn)
 			s.Start()
 		},
 	}
