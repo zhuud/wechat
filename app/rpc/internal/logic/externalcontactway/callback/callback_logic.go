@@ -3,6 +3,7 @@ package callback
 import (
 	"context"
 	"fmt"
+	"github.com/ArtisanCloud/PowerWeChat/v3/src/work/externalContact/messageTemplate/request"
 	"github.com/davecgh/go-spew/spew"
 	jsoniter "github.com/json-iterator/go"
 	"github.com/spf13/cast"
@@ -232,4 +233,42 @@ func (l *CallbackLogic) handleState(state string, data map[string]interface{}) (
 	}
 
 	return bizType, callback, true
+}
+
+// todo 新客欢迎语配置内容
+func (l *CallbackLogic) handleWelCome(welcomeCode string) error {
+	options := &request.RequestSendWelcomeMsg{
+		WelcomeCode: welcomeCode,
+		Text: &request.TextOfMessage{
+			Content: "",
+		},
+	}
+	options.Attachments = append(options.Attachments, &request.Attachment{
+		MsgType: "",
+		Image: &request.Image{
+			MediaID: "",
+			PicURL:  "",
+		},
+		Link: &request.Link{
+			Title:  "",
+			PicURL: "",
+			Desc:   "",
+			URL:    "",
+		},
+		MiniProgram: &request.MiniProgram{
+			Title:      "",
+			PicMediaID: "",
+			AppID:      "",
+			Page:       "",
+		},
+		Video: &request.Video{
+			MediaID: "",
+		},
+		File: &request.File{
+			MediaID: "",
+		},
+	})
+
+	l.svcCtx.WeCom.WithCorp(config.CropYx).MessageTemplate.SendWelcomeMsg(l.ctx, options)
+	return nil
 }
